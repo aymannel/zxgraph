@@ -1,0 +1,96 @@
+\documentclass{article}
+\pagestyle{empty}
+
+\usepackage[active,tightpage]{preview}
+\usepackage{pgfplots}
+\usepackage{color}
+\usepackage{tikz}
+
+\PreviewEnvironment[]{tikzpicture}
+\setlength\PreviewBorder{10pt}
+
+\pgfdeclarelayer{nodelayer}
+\pgfdeclarelayer{edgelayer}
+\pgfsetlayers{edgelayer,nodelayer,main}
+
+\pgfplotsset{compat=newest, compat/show suggested version=false}
+
+% Define colours
+\definecolor{red}{RGB}{232,165,165}
+\definecolor{yellow}{RGB}{255,215,0}
+\definecolor{green}{RGB}{216,248,216}
+
+% Define edge style
+\tikzstyle{simple_edge}=[draw=black]
+\tikzstyle{hadamard_edge}=[-, dashed, draw=blue]
+
+% Define node styles
+\tikzstyle{boundary}=[draw=black, shape=circle, scale=0.3, fill=black, font={\footnotesize}]
+\tikzstyle{hadamard}=[box, draw=black, shape=rectangle, fill={yellow}, minimum size=.55em]
+\tikzstyle{z_node}=[draw=black, shape=circle, fill={green}, inner sep=0.7mm, minimum width=0pt, minimum height=0pt]
+\tikzstyle{x_node}=[{z_node}, fill={red}, draw=black]
+\tikzstyle{x_phase}=[{z_phase}, fill={red}, draw=black]
+
+\tikzstyle{z_phase}=[
+    shape=rectangle,
+    fill={green},
+    draw=black,
+    minimum size=1.2em,
+    rounded corners=0.5em,
+    inner sep=0.2em,
+    outer sep=-0.2em,
+    scale=0.8,
+    font={\footnotesize}
+]
+
+\tikzstyle{y_node}=[
+    circle,
+    draw=black,
+    minimum width=2mm,
+    minimum height=2mm,
+    inner sep=0.7mm,
+    path picture={
+        \fill[fill=red]
+        (path picture bounding box.south west) --
+        (path picture bounding box.north east) --
+        (path picture bounding box.north west) -- cycle;
+        \fill[fill=green]
+        (path picture bounding box.south west) --
+        (path picture bounding box.south east) --
+        (path picture bounding box.north east) -- cycle;
+    }
+]
+
+\tikzstyle{y_phase}=[
+    shape=rectangle,
+    draw=black,
+    minimum size=1.2em,
+    rounded corners=0.5em,
+    inner sep=0.2em,
+    outer sep=-0.2em,
+    scale=0.8,
+    font={\footnotesize},
+    fill={green},
+    path picture={
+        \fill[sharp corners, red]
+        (path picture bounding box.south west) --
+        (path picture bounding box.north east) --
+        (path picture bounding box.north west) -- cycle;
+        \fill[sharp corners, green]
+        (path picture bounding box.south west) --
+        (path picture bounding box.south east) --
+        (path picture bounding box.north east) -- cycle;
+    }
+]
+
+% Begin template
+\begin{document}
+    \begin{tikzpicture}[scale=0.5]
+        \begin{pgfonlayer}{nodelayer}
+{vertices}
+        \end{pgfonlayer}
+        \begin{pgfonlayer}{edgelayer}
+{edges}
+        \end{pgfonlayer}
+    \end{tikzpicture}
+\end{document}
