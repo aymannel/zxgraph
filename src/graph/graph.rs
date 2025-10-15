@@ -1,5 +1,5 @@
 use crate::graph::phase::Phase;
-use crate::graph::{EdgeType, Vertex, VertexType};
+use crate::graph::{Bases, Boundary, EdgeType, Pauli, Vertex};
 use petgraph::prelude::{NodeIndex, StableUnGraph};
 use petgraph::stable_graph::{EdgeReferences, NodeReferences};
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
@@ -12,71 +12,70 @@ pub struct BaseGraph {
 }
 
 impl BaseGraph {
-    /// Adds empty graph with estimated qubit capacity
-    pub fn new(num_qubits: usize) -> Self {
-        assert!(num_qubits > 0, "Cannot create empty BaseGraph");
-        let inputs = Vec::with_capacity(num_qubits);
-        let outputs = Vec::with_capacity(num_qubits);
-        let graph = StableUnGraph::with_capacity(2 * num_qubits, num_qubits);
-
-        let mut base_graph = BaseGraph {
-            graph,
-            inputs,
-            outputs,
-        };
-
-        for qubit in 0..num_qubits {
-            let input = base_graph.add_input(qubit);
-            let output = base_graph.add_output(qubit);
-            base_graph.add_edge(input, output);
+    /// Creates an empty graph
+    pub fn new() -> Self {
+        BaseGraph {
+            graph: StableUnGraph::with_capacity(0, 0),
+            inputs: Vec::new(),
+            outputs: Vec::new(),
         }
-
-        base_graph
     }
 
-    /// Builder: Adds BaseGraph with a single vertex on the specified qubit
+    /// Creates an empty graph with the wires specified
+    pub fn empty(num_qubits: usize) -> Self {
+        assert!(num_qubits > 0, "Number of qubits must be greater than zero");
+        BaseGraph::new().with_wires(0..num_qubits)
+    }
+
+    /// Builder: Adds a single vertex on the specified qubit
     pub fn with_vertex(mut self, vertex: Vertex) -> Self {
-        self.add_vertex_on_wire(vertex);
+        self.add_vertex_to_wire(vertex);
         self
     }
 
-    /// Builder: Adds BaseGraph with input and output boundary nodes connected along the specified qubit
+    /// Builder: Adds a single wire along the specified qubit
     pub fn with_wire(mut self, qubit: usize) -> Self {
-        todo!()
+        // todo - Do nothing if already exists. See StableGraph::contains_edge()
+        let input = self.add_input(qubit);
+        let output = self.add_output(qubit);
+        self.add_edge(input, output);
+        self
     }
 
-    /// Builder: Adds BaseGraph with input and output boundary nodes connected along the specified qubits
-    pub fn with_wires(mut self, qubit: Vec<usize>) -> Self {
-        todo!()
+    /// Builder: Adds any number of wires along the qubits specified by some iterator
+    pub fn with_wires(mut self, qubits: impl IntoIterator<Item = usize>) -> Self {
+        for qubit in qubits {
+            self = self.with_wire(qubit);
+        }
+        self
     }
 
     /// Adds new input boundary node
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
-        let node = self.graph.add_node(Vertex {
-            vertex_type: VertexType::B,
-            phase: Phase::from(0.0),
-            qubit: qubit as f64,
-            row: 0.0,
-        });
+        let node = self.graph.add_node(Vertex::b()
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(0.0)
+        );
+
         self.inputs.push(node);
         node
     }
 
+    // todo - check depth / perhaps create Layout class?
     /// Adds new output boundary
     pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
-        let vertex = self.graph.add_node(Vertex {
-            vertex_type: VertexType::B,
-            phase: Phase::from(0.0),
-            qubit: qubit as f64,
-            row: 2.0,  // check graph depth here
-        });
+        let vertex = self.graph.add_node(Vertex::b()
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(2.0));
         self.outputs.push(vertex);
         vertex
     }
 
     // todo - improve me!
     /// Returns maximum qubit
-    pub fn max_qubit(&self) -> f64 {
+    pub fn max_qubit(&self) -> usize {
         self.inputs().iter()
             .filter_map(|&index| self.graph.node_weight(index))
             .map(|vertex| vertex.qubit)
@@ -144,93 +143,87 @@ impl BaseGraph {
     }
 
     /// Adds new z vertex
-    pub fn add_z(&mut self, qubit: f64, row: f64, phase: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::Z,
-            phase: Phase::from(phase),
-            qubit,
-            row
-        })
+    pub fn add_z(&mut self, qubit: usize, x: f64, phase: Phase) -> NodeIndex {
+        self.add_vertex(Vertex::z()
+            .with_phase(phase)
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new z zero state
-    pub fn add_z_zero(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::Z,
-            phase: Phase::from(0.0),
-            qubit,
-            row
-        })
+    pub fn add_z_zero(&mut self, qubit: usize, x: f64) -> NodeIndex {
+        self.add_vertex(Vertex::z()
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new z one state
-    pub fn add_z_one(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::Z,
-            phase: Phase::from(1.0),
-            qubit,
-            row
-        })
+    pub fn add_z_one(&mut self, qubit: usize, x: f64) -> NodeIndex {
+        self.add_vertex(Vertex::z_pauli()
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new x vertex
-    pub fn add_x(&mut self, qubit: f64, row: f64, phase: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::X,
-            phase: Phase::from(phase),
-            qubit,
-            row
-        })
+    pub fn add_x(&mut self, qubit: usize, x: f64, phase: Phase) -> NodeIndex {
+        self.add_vertex(Vertex::x()
+            .with_phase(phase)
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new x zero state
-    pub fn add_x_zero(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::X,
-            phase: Phase::from(0.0),
-            qubit,
-            row
-        })
+    pub fn add_x_zero(&mut self, qubit: usize, x: f64) -> NodeIndex {
+        self.add_vertex(Vertex::x()
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new x one state
-    pub fn add_x_one(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::X,
-            phase: Phase::from(1.0),
-            qubit,
-            row
-        })
+    pub fn add_x_one(&mut self, qubit: usize, x: f64) -> NodeIndex {
+        self.add_vertex(Vertex::x_pauli()
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new y vertex
-    pub fn add_y(&mut self, qubit: f64, row: f64, phase: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::Y,
-            phase: Phase::from(phase),
-            qubit,
-            row
-        })
+    pub fn add_y(&mut self, qubit: usize, x: f64, phase: Phase) -> NodeIndex {
+        self.add_vertex(Vertex::y()
+            .with_phase(phase)
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new y zero state
-    pub fn add_y_zero(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::Y,
-            phase: Phase::from(0.0),
-            qubit,
-            row
-        })
+    pub fn add_y_zero(&mut self, qubit: usize, x: f64) -> NodeIndex {
+        self.add_vertex(Vertex::y()
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new y one state
-    pub fn add_y_one(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {
-            vertex_type: VertexType::Y,
-            phase: Phase::from(1.0),
-            qubit,
-            row
-        })
+    pub fn add_y_one(&mut self, qubit: usize, x: f64) -> NodeIndex {
+        self.add_vertex(Vertex::y_pauli()
+            .with_qubit(qubit)
+            .with_y(qubit as f64)
+            .with_x(x)
+        )
     }
 
     /// Adds new edge between two vertices
@@ -265,8 +258,8 @@ impl BaseGraph {
     }
 
     /// Inserts vertex on the edge connecting and input along specified qubit
-    pub fn add_vertex_on_wire(&mut self, vertex: Vertex) -> NodeIndex {
-        let qubit = vertex.qubit as usize;
+    pub fn add_vertex_to_wire(&mut self, vertex: Vertex) -> NodeIndex {
+        let qubit = vertex.qubit;
         let index = self.add_vertex(vertex);
         self.add_edge(self.inputs()[qubit], index);
         self.add_edge(self.outputs()[qubit], index);
@@ -277,17 +270,18 @@ impl BaseGraph {
 
 #[cfg(test)]
 mod tests {
+    use crate::graph::VertexType;
     use super::*;
 
     #[test]
     #[should_panic(expected = "Cannot create empty BaseGraph")]
     fn cannot_create_empty_base_graph() {
-        BaseGraph::new(0);
+        BaseGraph::empty(0);
     }
 
     #[test]
     fn can_create_base_graph_with_capacity() {
-        let graph = BaseGraph::new(3);
+        let graph = BaseGraph::empty(3);
         assert_eq!(graph.num_vertices(), 6);
         assert_eq!(graph.num_edges(), 3);
         assert_eq!(graph.num_inputs(), 3);
@@ -296,17 +290,17 @@ mod tests {
 
     #[test]
     fn can_add_vertex() {
-        let mut graph = BaseGraph::new(1);
+        let mut graph = BaseGraph::empty(1);
         assert_eq!(graph.num_vertices(), 2);
         assert_eq!(graph.num_inputs(), 1);
         assert_eq!(graph.num_outputs(), 1);
 
-        graph.add_vertex(Vertex {
-            vertex_type: VertexType::B,
-            phase: Phase::from(0.0),
-            qubit: 1.0,
-            row: 1.0
-        });
+        graph.add_vertex(Vertex::new()
+            .with_type(VertexType::Z)
+            .with_qubit(0)
+            .with_x(1.0)
+            .with_y(0.0)
+        );
 
         assert_eq!(graph.num_vertices(), 3);
         assert_eq!(graph.num_inputs(), 1);
@@ -315,7 +309,7 @@ mod tests {
 
     #[test]
     fn can_add_edge() {
-        let mut graph = BaseGraph::new(1);
+        let mut graph = BaseGraph::empty(1);
         assert_eq!(graph.num_edges(), 1);
         assert_eq!(graph.num_inputs(), 1);
         assert_eq!(graph.num_outputs(), 1);

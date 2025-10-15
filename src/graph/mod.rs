@@ -6,26 +6,52 @@ mod pauli;
 mod gadget;
 mod clifford;
 
+use crate::graph::phase::Phase;
 pub use graph::BaseGraph;
 pub use types::{EdgeType, Vertex, VertexType};
 
-pub trait Gadget {
-    /// Creates an instance of BaseGraph representing a Pauli Gadget
-    fn gadget(pauli_string: &str, phase: f64) -> BaseGraph;
+pub trait Boundary {
+    fn b() -> Vertex;
+}
+
+pub trait Bases {
+    fn z() -> Vertex;
+    fn x() -> Vertex;
+    fn y() -> Vertex;
 }
 
 pub trait Pauli {
-    /// Creates an instance of BaseGraph representing Pauli Z
-    fn z(qubit: usize) -> BaseGraph;
-
-    /// Creates an instance of BaseGraph representing Pauli X
-    fn x(qubit: usize) -> BaseGraph;
-
-    /// Creates an instance of BaseGraph representing Pauli Y
-    fn y(qubit: usize) -> BaseGraph;
+    fn z_pauli() -> Vertex;
+    fn x_pauli() -> Vertex;
+    fn y_pauli() -> Vertex;
 }
 
 pub trait Clifford {
+    fn z_plus() -> Vertex;
+    fn z_minus() -> Vertex;
+    fn x_plus() -> Vertex;
+    fn x_minus() -> Vertex;
+    fn y_plus() -> Vertex;
+    fn y_minus() -> Vertex;
+}
+
+pub trait GadgetGraph {
+    /// Creates an instance of BaseGraph representing a Pauli Gadget
+    fn gadget(pauli_string: &str, phase: Phase) -> BaseGraph;
+}
+
+pub trait PauliGraph {
+    /// Creates an instance of BaseGraph representing Pauli Z
+    fn z_pauli(qubit: usize) -> BaseGraph;
+
+    /// Creates an instance of BaseGraph representing Pauli X
+    fn x_pauli(qubit: usize) -> BaseGraph;
+
+    /// Creates an instance of BaseGraph representing Pauli Y
+    fn y_pauli(qubit: usize) -> BaseGraph;
+}
+
+pub trait CliffordGraph {
     /// Creates an instance of BaseGraph representing the CNOT Clifford
     fn cx(control: usize, target: usize) -> BaseGraph;
 

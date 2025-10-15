@@ -6,9 +6,27 @@ pub struct Phase {
 }
 
 impl Phase {
-    pub fn new() -> Self {
+    pub fn zero() -> Self {
         Phase {
             angle: Fraction::from(0)
+        }
+    }
+
+    pub fn one() -> Self {
+        Phase {
+            angle: Fraction::from(1)
+        }
+    }
+
+    pub fn plus() -> Self {
+        Phase {
+            angle: Fraction::from(0.5)
+        }
+    }
+
+    pub fn minus() -> Self {
+        Phase {
+            angle: Fraction::from(-0.5)
         }
     }
 

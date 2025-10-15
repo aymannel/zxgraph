@@ -23,11 +23,11 @@ impl Exportable for BaseGraph {
             };
 
             // Format export node
-            let row = vertex.row;
-            let qubit = -vertex.qubit;
+            let x = vertex.x.unwrap();
+            let y = -vertex.y.unwrap();
             let index = node_index.index();
             let phase = vertex.phase.to_latex();
-            writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({row:.2}, {qubit:.2}) {{{phase}}};")?;
+            writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};")?;
         }
 
         // Add edges
@@ -54,7 +54,7 @@ impl Exportable for BaseGraph {
         Ok(())
     }
 
-    // todo - make OS agnostic + check pdflatex is installed
+    // todo - make OS agnostic + check pdflatex is installed // or remove entirely?
     fn to_pdf(&self, name: &str) -> Result<(), Box<dyn Error>> {
         let source_path = format!("output/{name}");
         Command::new("pdflatex").args(&[
@@ -65,12 +65,17 @@ impl Exportable for BaseGraph {
         ]).status()?;
         Ok(())
     }
+
+    fn to_json(&self, name: &str) -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{BaseGraph, Clifford, Gadget, Pauli};
+    use crate::graph::{BaseGraph, CliffordGraph, GadgetGraph, PauliGraph};
+    use crate::graph::phase::Phase;
 
     #[macro_export]
     macro_rules! export_and_open {
@@ -94,13 +99,13 @@ mod tests {
 
     #[test]
     fn can_export_gadget() {
-        let graph = BaseGraph::gadget("IXZYY", 1.5);
+        let graph = BaseGraph::gadget("IXZYY", Phase::minus());
         export_and_open!(graph, "gadget.tex");
     }
 
     #[test]
-    fn can_export_pauli_x() {
-        let graph = BaseGraph::y(1);
+    fn can_export_pauli_y() {
+        let graph = BaseGraph::y_pauli(1);
         export_and_open!(graph, "pauli_x.tex");
     }
 
