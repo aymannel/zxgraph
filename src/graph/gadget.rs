@@ -1,6 +1,5 @@
-use crate::graph::{BaseGraph, Bases, GadgetGraph, Vertex};
-use petgraph::prelude::NodeIndex;
 use crate::graph::phase::Phase;
+use crate::graph::{BaseGraph, Bases, GadgetGraph, Vertex};
 
 impl GadgetGraph for BaseGraph {
     fn gadget(pauli_string: &str, phase: Phase) -> BaseGraph {
@@ -10,22 +9,24 @@ impl GadgetGraph for BaseGraph {
             .with_y(graph.max_qubit() as f64 + 0.8)
             .with_x(1.8)
         );
-        
+
         for (qubit, pauli) in pauli_string.chars().enumerate() {
-            let optional_index: Option<NodeIndex> = match pauli.to_ascii_lowercase() {
-                'z' => Some(graph.add_z_zero(qubit, 1.0)),
-                'x' => Some(graph.add_x_zero(qubit, 1.0)),
-                'y' => Some(graph.add_y_zero(qubit, 1.0)),
+            let opt_vertex: Option<Vertex> = match pauli.to_ascii_lowercase() {
+                'z' => Some(Vertex::z()),
+                'x' => Some(Vertex::x()),
+                'y' => Some(Vertex::y()),
                 _ => {None},
             };
 
-            if let Some(index) = optional_index {
-                graph.remove_wire(qubit);
+            if let Some(vertex) = opt_vertex {
+                let index = graph.add_vertex_to_wire(vertex
+                    .with_qubit(qubit)
+                    .with_quords()
+                );
                 graph.add_edge(index, hub);
-                graph.add_edge(index, graph.inputs()[qubit]);
-                graph.add_edge(index, graph.outputs()[qubit]);
             }
         }
+
         graph
     }
 }

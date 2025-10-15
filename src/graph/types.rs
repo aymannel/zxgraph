@@ -9,47 +9,89 @@ pub enum VertexType { B, Z, X, Y, H }
 
 #[derive(Debug, Clone)]
 pub struct Vertex {
-    pub vertex_type: VertexType,
-    pub phase: Phase,
-    pub qubit: usize,
-    pub x: Option<f64>,
-    pub y: Option<f64>,
+    vertex_type: VertexType,
+    phase: Phase,
+    qubit: usize,
+    xpos: Option<f64>,
+    ypos: Option<f64>,
 }
 
 impl Vertex {
+    /// Constructor: Creates instance of Vertex with default values
     pub fn new() -> Self {
         Self {
             vertex_type: VertexType::Z,
             phase: Phase::zero(),
             qubit: 0,
-            x: None,
-            y: None,
+            xpos: None,
+            ypos: None,
         }
     }
 
+    /// Getter: Returns vertex_type
+    pub fn vertex_type(&self) -> &VertexType {
+        &self.vertex_type
+    }
+
+    /// Getter: Returns vertex_type
+    pub fn phase(&self) -> &Phase {
+        &self.phase
+    }
+
+    /// Getter: Returns qubit
+    pub fn qubit(&self) -> usize {
+        self.qubit
+    }
+
+    /// Getter: Returns x coordinate
+    pub fn xpos(&self) -> Option<f64> {
+        self.xpos
+    }
+
+    /// Getter: Returns x coordinate
+    pub fn ypos(&self) -> Option<f64> {
+        self.ypos
+    }
+
+    /// Builder: Sets vertex_type
     pub fn with_type(mut self, vertex_type: VertexType) -> Self {
         self.vertex_type = vertex_type;
         self
     }
 
+    /// Builder: Sets phase
     pub fn with_phase(mut self, phase: Phase) -> Self {
         self.phase = phase;
         self
     }
 
+    /// Builder: Sets qubit
     pub fn with_qubit(mut self, qubit: usize) -> Self {
         self.qubit = qubit;
         self
     }
 
+    /// Builder: Sets x coordinate
     pub fn with_x(mut self, x: f64) -> Self {
-        self.x = Some(x);
+        self.xpos = Some(x);
         self
     }
 
+    /// Builder: Sets y coordinate
     pub fn with_y(mut self, y: f64) -> Self {
-        self.y = Some(y);
+        self.ypos = Some(y);
         self
+    }
+
+    /// Builder: Sets both coordinates
+    pub fn with_coords(self, x: f64, y: f64) -> Self {
+        self.with_x(x).with_y(y)
+    }
+    
+    /// Builder: Sets coordinates by qubit
+    pub fn with_quords(self) -> Self {
+        let qubit = self.qubit();
+        self.with_x(1.0).with_y(qubit as f64)
     }
 }
 

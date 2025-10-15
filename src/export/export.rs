@@ -11,7 +11,7 @@ impl Exportable for BaseGraph {
         // Add vertices
         let mut vertices = String::new();
         for (node_index, vertex) in self.enumerate_vertices() {
-            let style: &str = match (vertex.vertex_type, vertex.phase.is_zero()) {
+            let style: &str = match (vertex.vertex_type(), vertex.phase().is_zero()) {
                 (VertexType::B, _) => "boundary",
                 (VertexType::H, _) => "hadamard",
                 (VertexType::Z, true) => "z_node",
@@ -23,10 +23,10 @@ impl Exportable for BaseGraph {
             };
 
             // Format export node
-            let x = vertex.x.unwrap();
-            let y = -vertex.y.unwrap();
+            let x = vertex.xpos().unwrap();
+            let y = -vertex.ypos().unwrap();
             let index = node_index.index();
-            let phase = vertex.phase.to_latex();
+            let phase = vertex.phase().to_latex();
             writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};")?;
         }
 
@@ -74,8 +74,8 @@ impl Exportable for BaseGraph {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{BaseGraph, CliffordGraph, GadgetGraph, PauliGraph};
     use crate::graph::phase::Phase;
+    use crate::graph::{BaseGraph, CliffordGraph, GadgetGraph, PauliGraph};
 
     #[macro_export]
     macro_rules! export_and_open {
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn can_export_gadget() {
-        let graph = BaseGraph::gadget("IXZYY", Phase::minus());
+        let graph = BaseGraph::gadget("IXZYYXZ", Phase::minus());
         export_and_open!(graph, "gadget.tex");
     }
 

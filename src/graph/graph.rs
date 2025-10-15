@@ -1,5 +1,4 @@
-use crate::graph::phase::Phase;
-use crate::graph::{Bases, Boundary, EdgeType, Pauli, Vertex};
+use crate::graph::{Boundary, EdgeType, Vertex};
 use petgraph::prelude::{NodeIndex, StableUnGraph};
 use petgraph::stable_graph::{EdgeReferences, NodeReferences};
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
@@ -57,7 +56,6 @@ impl BaseGraph {
             .with_y(qubit as f64)
             .with_x(0.0)
         );
-
         self.inputs.push(node);
         node
     }
@@ -78,7 +76,7 @@ impl BaseGraph {
     pub fn max_qubit(&self) -> usize {
         self.inputs().iter()
             .filter_map(|&index| self.graph.node_weight(index))
-            .map(|vertex| vertex.qubit)
+            .map(|vertex| vertex.qubit())
             .max_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap()
     }
@@ -142,90 +140,6 @@ impl BaseGraph {
         self.graph.add_node(vertex)
     }
 
-    /// Adds new z vertex
-    pub fn add_z(&mut self, qubit: usize, x: f64, phase: Phase) -> NodeIndex {
-        self.add_vertex(Vertex::z()
-            .with_phase(phase)
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
-    /// Adds new z zero state
-    pub fn add_z_zero(&mut self, qubit: usize, x: f64) -> NodeIndex {
-        self.add_vertex(Vertex::z()
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
-    /// Adds new z one state
-    pub fn add_z_one(&mut self, qubit: usize, x: f64) -> NodeIndex {
-        self.add_vertex(Vertex::z_pauli()
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
-    /// Adds new x vertex
-    pub fn add_x(&mut self, qubit: usize, x: f64, phase: Phase) -> NodeIndex {
-        self.add_vertex(Vertex::x()
-            .with_phase(phase)
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
-    /// Adds new x zero state
-    pub fn add_x_zero(&mut self, qubit: usize, x: f64) -> NodeIndex {
-        self.add_vertex(Vertex::x()
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
-    /// Adds new x one state
-    pub fn add_x_one(&mut self, qubit: usize, x: f64) -> NodeIndex {
-        self.add_vertex(Vertex::x_pauli()
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
-    /// Adds new y vertex
-    pub fn add_y(&mut self, qubit: usize, x: f64, phase: Phase) -> NodeIndex {
-        self.add_vertex(Vertex::y()
-            .with_phase(phase)
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
-    /// Adds new y zero state
-    pub fn add_y_zero(&mut self, qubit: usize, x: f64) -> NodeIndex {
-        self.add_vertex(Vertex::y()
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
-    /// Adds new y one state
-    pub fn add_y_one(&mut self, qubit: usize, x: f64) -> NodeIndex {
-        self.add_vertex(Vertex::y_pauli()
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(x)
-        )
-    }
-
     /// Adds new edge between two vertices
     pub fn add_edge(&mut self, source: NodeIndex, target: NodeIndex) {
         self.add_edge_of_type(source, target, EdgeType::Simple);
@@ -259,7 +173,7 @@ impl BaseGraph {
 
     /// Inserts vertex on the edge connecting and input along specified qubit
     pub fn add_vertex_to_wire(&mut self, vertex: Vertex) -> NodeIndex {
-        let qubit = vertex.qubit;
+        let qubit = vertex.qubit();
         let index = self.add_vertex(vertex);
         self.add_edge(self.inputs()[qubit], index);
         self.add_edge(self.outputs()[qubit], index);
@@ -270,8 +184,8 @@ impl BaseGraph {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph::VertexType;
     use super::*;
+    use crate::graph::VertexType;
 
     #[test]
     #[should_panic(expected = "Cannot create empty BaseGraph")]
