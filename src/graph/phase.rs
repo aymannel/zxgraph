@@ -6,6 +6,12 @@ pub struct Phase {
 }
 
 impl Phase {
+    pub fn new() -> Self {
+        Phase {
+            angle: Fraction::from(0)
+        }
+    }
+
     pub fn from(angle: f64) -> Self {
         let mut frac = Fraction::from(angle % 2.0);
         if frac < Fraction::from(0) {

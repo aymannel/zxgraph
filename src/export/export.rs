@@ -54,6 +54,7 @@ impl Exportable for BaseGraph {
         Ok(())
     }
 
+    // todo - make OS agnostic + check pdflatex is installed
     fn to_pdf(&self, name: &str) -> Result<(), Box<dyn Error>> {
         let source_path = format!("output/{name}");
         Command::new("pdflatex").args(&[
@@ -71,39 +72,53 @@ mod tests {
     use super::*;
     use crate::graph::{BaseGraph, Clifford, Gadget, Pauli};
 
+    #[macro_export]
+    macro_rules! export_and_open {
+        ($graph:expr, $file_name:expr) => {
+            {
+                use std::process::Command;
+                let file_name = $file_name;
+                let graph = $graph;
+
+                graph.to_tex(file_name).expect("Could not generate tex file");
+                graph.to_pdf(file_name).expect("Could not generate pdf");
+
+                Command::new("open")
+                    .current_dir("output")
+                    .arg(file_name.replace("tex", "pdf"))
+                    .status()
+                    .expect("Could not open pdf");
+            }
+        };
+    }
+
     #[test]
     fn can_export_gadget() {
-        let file_name = "gadget.tex";
         let graph = BaseGraph::gadget("IXZYY", 1.5);
-        graph.to_tex(file_name).expect("Could not generate tex file");
-        graph.to_pdf(file_name).expect("Could not generate pdf");
-
-        Command::new("open")
-            .current_dir("output").arg(file_name.replace("tex", "pdf"))
-            .status().expect("Could not open pdf");
+        export_and_open!(graph, "gadget.tex");
     }
 
     #[test]
     fn can_export_pauli_x() {
-        let file_name = "pauli_x.tex";
         let graph = BaseGraph::y(1);
-        graph.to_tex(file_name).expect("Could not generate tex file");
-        graph.to_pdf(file_name).expect("Could not generate pdf");
-
-        Command::new("open")
-            .current_dir("output").arg(file_name.replace("tex", "pdf"))
-            .status().expect("Could not open pdf");
+        export_and_open!(graph, "pauli_x.tex");
     }
 
     #[test]
     fn can_export_x_plus() {
-        let file_name = "x_plus.tex";
         let graph = BaseGraph::x_plus(1);
-        graph.to_tex(file_name).expect("Could not generate tex file");
-        graph.to_pdf(file_name).expect("Could not generate pdf");
+        export_and_open!(graph, "x_plus.tex");
+    }
 
-        Command::new("open")
-            .current_dir("output").arg(file_name.replace("tex", "pdf"))
-            .status().expect("Could not open pdf");
+    #[test]
+    fn can_export_cx() {
+        let graph = BaseGraph::cx(0, 2);
+        export_and_open!(graph, "cx.tex");
+    }
+
+    #[test]
+    fn can_export_cz() {
+        let graph = BaseGraph::cz(0, 1);
+        export_and_open!(graph, "cz.tex");
     }
 }

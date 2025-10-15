@@ -12,7 +12,7 @@ pub struct BaseGraph {
 }
 
 impl BaseGraph {
-    /// Creates empty graph with estimated qubit capacity
+    /// Adds empty graph with estimated qubit capacity
     pub fn new(num_qubits: usize) -> Self {
         assert!(num_qubits > 0, "Cannot create empty BaseGraph");
         let inputs = Vec::with_capacity(num_qubits);
@@ -26,53 +26,55 @@ impl BaseGraph {
         };
 
         for qubit in 0..num_qubits {
-            let input = base_graph.add_input(qubit as f64);
-            let output = base_graph.add_output(qubit as f64);
+            let input = base_graph.add_input(qubit);
+            let output = base_graph.add_output(qubit);
             base_graph.add_edge(input, output);
         }
 
         base_graph
     }
 
-    /// Creates BaseGraph with a single vertex on the specified qubit
-    pub fn with_vertex(qubit: usize, vertex_type: VertexType, phase: f64) -> BaseGraph {
-        let mut graph = BaseGraph::new(qubit + 1);
-        let vertex_index = graph.add_vertex(Vertex {
-            vertex_type,
-            phase: Phase::from(phase),
-            qubit: qubit as f64,
-            row: 1.0
-        });
-        graph.add_edge(vertex_index, graph.inputs()[qubit]);
-        graph.add_edge(vertex_index, graph.outputs()[qubit]);
-        graph.remove_wire(qubit);
-        graph
+    /// Builder: Adds BaseGraph with a single vertex on the specified qubit
+    pub fn with_vertex(mut self, vertex: Vertex) -> Self {
+        self.add_vertex_on_wire(vertex);
+        self
     }
 
-    /// Creates new input boundary node
-    pub fn add_input(&mut self, qubit: f64) -> NodeIndex {
+    /// Builder: Adds BaseGraph with input and output boundary nodes connected along the specified qubit
+    pub fn with_wire(mut self, qubit: usize) -> Self {
+        todo!()
+    }
+
+    /// Builder: Adds BaseGraph with input and output boundary nodes connected along the specified qubits
+    pub fn with_wires(mut self, qubit: Vec<usize>) -> Self {
+        todo!()
+    }
+
+    /// Adds new input boundary node
+    pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
         let node = self.graph.add_node(Vertex {
             vertex_type: VertexType::B,
             phase: Phase::from(0.0),
+            qubit: qubit as f64,
             row: 0.0,
-            qubit,
         });
         self.inputs.push(node);
         node
     }
 
-    /// Creates new output boundary
-    pub fn add_output(&mut self, qubit: f64) -> NodeIndex {
+    /// Adds new output boundary
+    pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
         let vertex = self.graph.add_node(Vertex {
             vertex_type: VertexType::B,
             phase: Phase::from(0.0),
+            qubit: qubit as f64,
             row: 2.0,  // check graph depth here
-            qubit,
         });
         self.outputs.push(vertex);
         vertex
     }
 
+    // todo - improve me!
     /// Returns maximum qubit
     pub fn max_qubit(&self) -> f64 {
         self.inputs().iter()
@@ -82,6 +84,20 @@ impl BaseGraph {
             .unwrap()
     }
 
+    /// Returns vertex by NodeIndex
+    pub fn get_vertex(&self, index: NodeIndex) -> Option<&Vertex> {
+        self.graph.node_weight(index)
+    }
+
+    /// Returns all enumerated vertices in graph
+    pub fn enumerate_vertices(&self) -> NodeReferences<'_, Vertex> {
+        self.graph.node_references()
+    }
+
+    /// Returns all enumerated edges in graph
+    pub fn enumerate_edges(&self) -> EdgeReferences<'_, EdgeType> {
+        self.graph.edge_references()
+    }
     /// Returns total number of vertices
     pub fn num_vertices(&self) -> usize {
         self.graph.node_count()
@@ -122,62 +138,107 @@ impl BaseGraph {
         self.outputs.len()
     }
 
-    /// Creates new vertex
+    /// Adds new vertex
     pub fn add_vertex(&mut self, vertex: Vertex) -> NodeIndex {
         self.graph.add_node(vertex)
     }
 
-    /// Creates new z vertex
+    /// Adds new z vertex
     pub fn add_z(&mut self, qubit: f64, row: f64, phase: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::Z, phase: Phase::from(phase), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::Z,
+            phase: Phase::from(phase),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new z zero state
+    /// Adds new z zero state
     pub fn add_z_zero(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::Z, phase: Phase::from(0.0), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::Z,
+            phase: Phase::from(0.0),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new z one state
+    /// Adds new z one state
     pub fn add_z_one(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::Z, phase: Phase::from(1.0), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::Z,
+            phase: Phase::from(1.0),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new x vertex
+    /// Adds new x vertex
     pub fn add_x(&mut self, qubit: f64, row: f64, phase: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::X, phase: Phase::from(phase), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::X,
+            phase: Phase::from(phase),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new x zero state
+    /// Adds new x zero state
     pub fn add_x_zero(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::X, phase: Phase::from(0.0), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::X,
+            phase: Phase::from(0.0),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new x one state
+    /// Adds new x one state
     pub fn add_x_one(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::X, phase: Phase::from(1.0), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::X,
+            phase: Phase::from(1.0),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new y vertex
+    /// Adds new y vertex
     pub fn add_y(&mut self, qubit: f64, row: f64, phase: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::Y, phase: Phase::from(phase), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::Y,
+            phase: Phase::from(phase),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new y zero state
+    /// Adds new y zero state
     pub fn add_y_zero(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::Y, phase: Phase::from(0.0), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::Y,
+            phase: Phase::from(0.0),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new y one state
+    /// Adds new y one state
     pub fn add_y_one(&mut self, qubit: f64, row: f64) -> NodeIndex {
-        self.add_vertex(Vertex {vertex_type: VertexType::Y, phase: Phase::from(1.0), row, qubit})
+        self.add_vertex(Vertex {
+            vertex_type: VertexType::Y,
+            phase: Phase::from(1.0),
+            qubit,
+            row
+        })
     }
 
-    /// Creates new edge between two vertices
+    /// Adds new edge between two vertices
     pub fn add_edge(&mut self, source: NodeIndex, target: NodeIndex) {
         self.add_edge_of_type(source, target, EdgeType::Simple);
     }
 
-    /// Creates new edge with specified type between two vertices
+    /// Adds new edge with specified type between two vertices
     pub fn add_edge_of_type(&mut self, source: NodeIndex, target: NodeIndex, edge_type: EdgeType) {
         self.graph.add_edge(source, target, edge_type);
     }
@@ -203,14 +264,14 @@ impl BaseGraph {
         );
     }
 
-    /// Enumerates all vertices in graph
-    pub fn enumerate_vertices(&self) -> NodeReferences<'_, Vertex> {
-        self.graph.node_references()
-    }
-
-    /// Enumerates all edges in graph
-    pub fn enumerate_edges(&self) -> EdgeReferences<'_, EdgeType> {
-        self.graph.edge_references()
+    /// Inserts vertex on the edge connecting and input along specified qubit
+    pub fn add_vertex_on_wire(&mut self, vertex: Vertex) -> NodeIndex {
+        let qubit = vertex.qubit as usize;
+        let index = self.add_vertex(vertex);
+        self.add_edge(self.inputs()[qubit], index);
+        self.add_edge(self.outputs()[qubit], index);
+        self.remove_wire(qubit);
+        index
     }
 }
 
