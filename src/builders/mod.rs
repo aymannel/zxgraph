@@ -8,12 +8,10 @@ use crate::graph::BaseGraph;
 
 pub struct GraphBuilder;
 
-
 pub trait Gadget {
     /// Creates an instance of BaseGraph representing a Pauli Gadget
     fn gadget(pauli_string: &str, phase: Phase) -> BaseGraph;
 }
-
 
 pub trait Pauli {
     /// Creates an instance of BaseGraph representing Pauli Z
@@ -26,9 +24,8 @@ pub trait Pauli {
     fn y_pauli(qubit: usize) -> BaseGraph;
 }
 
-
 pub trait Clifford {
-    /// Creates an instance of BaseGraph representing the CNOT Clifford
+    /// Creates an instance of BaseGraph representing the CX Clifford
     fn cx(control: usize, target: usize) -> BaseGraph;
 
     /// Creates an instance of BaseGraph representing the CZ Clifford

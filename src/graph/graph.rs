@@ -20,35 +20,6 @@ impl BaseGraph {
         }
     }
 
-    /// Creates an empty graph with the wires specified
-    pub fn empty(num_qubits: usize) -> Self {
-        assert!(num_qubits > 0, "Number of qubits must be greater than zero");
-        BaseGraph::new().with_wires(0..num_qubits)
-    }
-
-    /// Builder: Adds a single vertex on the specified qubit
-    pub fn with_vertex(mut self, vertex: Vertex) -> Self {
-        self.add_vertex_to_wire(vertex);
-        self
-    }
-
-    /// Builder: Adds a single wire along the specified qubit
-    pub fn with_wire(mut self, qubit: usize) -> Self {
-        // todo - Do nothing if already exists. See StableGraph::contains_edge()
-        let input = self.add_input(qubit);
-        let output = self.add_output(qubit);
-        self.add_edge(input, output);
-        self
-    }
-
-    /// Builder: Adds any number of wires along the qubits specified by some iterator
-    pub fn with_wires(mut self, qubits: impl IntoIterator<Item = usize>) -> Self {
-        for qubit in qubits {
-            self = self.with_wire(qubit);
-        }
-        self
-    }
-
     /// Adds new input boundary node
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
         let node = self.graph.add_node(VertexBuilder::b()
@@ -71,6 +42,21 @@ impl BaseGraph {
             .build());
         self.outputs.push(vertex);
         vertex
+    }
+
+    /// Adds a single wire along the specified qubit
+    pub fn add_wire(&mut self, qubit: usize) {
+        // todo - Do nothing if already exists. See StableGraph::contains_edge()
+        let input = self.add_input(qubit);
+        let output = self.add_output(qubit);
+        self.add_edge(input, output);
+    }
+
+    /// Adds wires along the specified qubits
+    pub fn add_wires_along_qubits(&mut self, qubits: impl IntoIterator<Item = usize>) {
+        for qubit in qubits {
+            self.add_wire(qubit);
+        }
     }
 
     // todo - improve me!
@@ -189,14 +175,12 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic(expected = "Cannot create empty BaseGraph")]
-    fn cannot_create_empty_base_graph() {
-        BaseGraph::empty(0);
-    }
-
-    #[test]
     fn can_create_base_graph_with_capacity() {
-        let graph = BaseGraph::empty(3);
+        // When
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..3);
+
+        // Then
         assert_eq!(graph.num_vertices(), 6);
         assert_eq!(graph.num_edges(), 3);
         assert_eq!(graph.num_inputs(), 3);
@@ -205,7 +189,11 @@ mod tests {
 
     #[test]
     fn can_add_vertex() {
-        let mut graph = BaseGraph::empty(1);
+        // When
+        let mut graph = BaseGraph::new();
+        graph.add_wire(1);
+
+        // Then
         assert_eq!(graph.num_vertices(), 2);
         assert_eq!(graph.num_inputs(), 1);
         assert_eq!(graph.num_outputs(), 1);
@@ -224,7 +212,9 @@ mod tests {
 
     #[test]
     fn can_add_edge() {
-        let mut graph = BaseGraph::empty(1);
+        let mut graph = BaseGraph::new();
+        graph.add_wire(1);
+
         assert_eq!(graph.num_edges(), 1);
         assert_eq!(graph.num_inputs(), 1);
         assert_eq!(graph.num_outputs(), 1);

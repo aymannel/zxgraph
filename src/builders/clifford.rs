@@ -6,7 +6,8 @@ impl Clifford for GraphBuilder {
     /// Builder: Generates a BaseGraph instance of a CX gate
     fn cx(control: usize, target: usize) -> BaseGraph {
         assert_ne!(control, target);
-        let mut graph = BaseGraph::empty(max(control, target) + 1);
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..max(control, target) + 1);
 
         let z = graph.add_vertex_to_wire(VertexBuilder::z()
             .qubit(control)
@@ -27,7 +28,8 @@ impl Clifford for GraphBuilder {
     /// Builder: Generates a BaseGraph instance of a CZ gate
     fn cz(control: usize, target: usize) -> BaseGraph {
         assert_ne!(control, target);
-        let mut graph = BaseGraph::empty(max(control, target) + 1);
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..max(control, target) + 1);
 
         let z1 = graph.add_vertex_to_wire(VertexBuilder::z()
             .qubit(control)
@@ -47,55 +49,73 @@ impl Clifford for GraphBuilder {
 
     /// Builder: Generates a BaseGraph instance of a z plus gate
     fn z_plus(qubit: usize) -> BaseGraph {
-        BaseGraph::empty(qubit + 1).with_vertex(VertexBuilder::z_plus()
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..qubit + 1);
+        graph.add_vertex_to_wire(VertexBuilder::z_plus()
             .qubit(qubit)
             .qubit_coords()
             .build()
-        )
+        );
+        graph
     }
 
     /// Builder: Generates a BaseGraph instance of a z minus gate
     fn z_minus(qubit: usize) -> BaseGraph {
-        BaseGraph::empty(qubit + 1).with_vertex(VertexBuilder::z_minus()
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..qubit + 1);
+        graph.add_vertex_to_wire(VertexBuilder::z_minus()
             .qubit(qubit)
             .qubit_coords()
             .build()
-        )
+        );
+        graph
     }
 
     /// Builder: Generates a BaseGraph instance of a x plus gate
     fn x_plus(qubit: usize) -> BaseGraph {
-        BaseGraph::empty(qubit + 1).with_vertex(VertexBuilder::x_plus()
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..qubit + 1);
+        graph.add_vertex_to_wire(VertexBuilder::x_plus()
             .qubit(qubit)
             .qubit_coords()
             .build()
-        )
+        );
+        graph
     }
 
     /// Builder: Generates a BaseGraph instance of a x minus gate
     fn x_minus(qubit: usize) -> BaseGraph {
-        BaseGraph::empty(qubit + 1).with_vertex(VertexBuilder::x_minus()
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..qubit + 1);
+        graph.add_vertex_to_wire(VertexBuilder::x_minus()
             .qubit(qubit)
             .qubit_coords()
             .build()
-        )
+        );
+        graph
     }
 
     /// Builder: Generates a BaseGraph instance of a y plus gate
     fn y_plus(qubit: usize) -> BaseGraph {
-        BaseGraph::empty(qubit + 1).with_vertex(VertexBuilder::y_plus()
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..qubit + 1);
+        graph.add_vertex_to_wire(VertexBuilder::y_plus()
             .qubit(qubit)
             .qubit_coords()
             .build()
-        )
+        );
+        graph
     }
 
     /// Builder: Generates a BaseGraph instance of a y minus gate
     fn y_minus(qubit: usize) -> BaseGraph {
-        BaseGraph::empty(qubit + 1).with_vertex(VertexBuilder::y_minus()
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..qubit + 1);
+        graph.add_vertex_to_wire(VertexBuilder::y_minus()
             .qubit(qubit)
             .qubit_coords()
             .build()
-        )
+        );
+        graph
     }
 }

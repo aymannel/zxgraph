@@ -5,7 +5,8 @@ use crate::graph::{BaseGraph, VertexBuilder};
 impl Gadget for GraphBuilder {
     /// Builder: Generates a BaseGraph instance of some Pauli Gadget or Phase Gadget
     fn gadget(pauli_string: &str, phase: Phase) -> BaseGraph {
-        let mut graph = BaseGraph::empty(pauli_string.len());
+        let mut graph = BaseGraph::new();
+        graph.add_wires_along_qubits(0..pauli_string.len());
         let hub = graph.add_vertex(VertexBuilder::z()
             .phase(phase)
             .qubit(0)
