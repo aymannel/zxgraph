@@ -23,8 +23,8 @@ impl Exportable for BaseGraph {
             };
 
             // Format export node
-            let x = vertex.xpos().unwrap();
-            let y = -vertex.ypos().unwrap();
+            let x = vertex.x_pos().unwrap();
+            let y = -vertex.y_pos().unwrap();
             let index = node_index.index();
             let phase = vertex.phase().to_latex();
             writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};")?;
@@ -74,8 +74,8 @@ impl Exportable for BaseGraph {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::builders::{Clifford, Gadget, GraphBuilder, Pauli};
     use crate::graph::phase::Phase;
-    use crate::graph::{BaseGraph, CliffordGraph, GadgetGraph, PauliGraph};
 
     #[macro_export]
     macro_rules! export_and_open {
@@ -99,31 +99,31 @@ mod tests {
 
     #[test]
     fn can_export_gadget() {
-        let graph = BaseGraph::gadget("IXZYYXZ", Phase::minus());
+        let graph = GraphBuilder::gadget("XYYZ", Phase::minus());
         export_and_open!(graph, "gadget.tex");
     }
 
     #[test]
     fn can_export_pauli_y() {
-        let graph = BaseGraph::y_pauli(1);
+        let graph = GraphBuilder::y_pauli(1);
         export_and_open!(graph, "pauli_x.tex");
     }
 
     #[test]
     fn can_export_x_plus() {
-        let graph = BaseGraph::x_plus(1);
+        let graph = GraphBuilder::x_plus(1);
         export_and_open!(graph, "x_plus.tex");
     }
 
     #[test]
     fn can_export_cx() {
-        let graph = BaseGraph::cx(0, 2);
+        let graph = GraphBuilder::cx(0, 2);
         export_and_open!(graph, "cx.tex");
     }
 
     #[test]
     fn can_export_cz() {
-        let graph = BaseGraph::cz(0, 1);
+        let graph = GraphBuilder::cz(0, 1);
         export_and_open!(graph, "cz.tex");
     }
 }

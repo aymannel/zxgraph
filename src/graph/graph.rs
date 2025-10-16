@@ -1,4 +1,4 @@
-use crate::graph::{Boundary, EdgeType, Vertex};
+use crate::graph::{EdgeType, Vertex, VertexBuilder};
 use petgraph::prelude::{NodeIndex, StableUnGraph};
 use petgraph::stable_graph::{EdgeReferences, NodeReferences};
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
@@ -51,10 +51,11 @@ impl BaseGraph {
 
     /// Adds new input boundary node
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
-        let node = self.graph.add_node(Vertex::b()
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(0.0)
+        let node = self.graph.add_node(VertexBuilder::b()
+            .qubit(qubit)
+            .qubit_coords()
+            .x_pos(0.0)
+            .build()
         );
         self.inputs.push(node);
         node
@@ -63,10 +64,11 @@ impl BaseGraph {
     // todo - check depth / perhaps create Layout class?
     /// Adds new output boundary
     pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
-        let vertex = self.graph.add_node(Vertex::b()
-            .with_qubit(qubit)
-            .with_y(qubit as f64)
-            .with_x(2.0));
+        let vertex = self.graph.add_node(VertexBuilder::b()
+            .qubit(qubit)
+            .qubit_coords()
+            .x_pos(2.0)
+            .build());
         self.outputs.push(vertex);
         vertex
     }
@@ -185,7 +187,6 @@ impl BaseGraph {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::VertexType;
 
     #[test]
     #[should_panic(expected = "Cannot create empty BaseGraph")]
@@ -209,11 +210,11 @@ mod tests {
         assert_eq!(graph.num_inputs(), 1);
         assert_eq!(graph.num_outputs(), 1);
 
-        graph.add_vertex(Vertex::new()
-            .with_type(VertexType::Z)
-            .with_qubit(0)
-            .with_x(1.0)
-            .with_y(0.0)
+        graph.add_vertex(VertexBuilder::z()
+            .qubit(0)
+            .x_pos(1.0)
+            .y_pos(0.0)
+            .build()
         );
 
         assert_eq!(graph.num_vertices(), 3);
