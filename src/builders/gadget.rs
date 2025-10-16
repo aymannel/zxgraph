@@ -11,7 +11,7 @@ impl Gadget for GraphBuilder {
             .phase(phase)
             .qubit(0)
             .y_pos(graph.max_qubit() as f64 + 0.8)
-            .x_pos(1.8)
+            .x_pos(0.8)
             .build()
         );
 

@@ -25,7 +25,7 @@ impl BaseGraph {
         let node = self.graph.add_node(VertexBuilder::b()
             .qubit(qubit)
             .qubit_coords()
-            .x_pos(0.0)
+            .x_pos(-1.0)
             .build()
         );
         self.inputs.push(node);
@@ -38,7 +38,7 @@ impl BaseGraph {
         let vertex = self.graph.add_node(VertexBuilder::b()
             .qubit(qubit)
             .qubit_coords()
-            .x_pos(2.0)
+            .x_pos(1.0)
             .build());
         self.outputs.push(vertex);
         vertex

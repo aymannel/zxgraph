@@ -112,7 +112,7 @@ impl VertexBuilder {
     pub fn qubit_coords(mut self) -> Self {
         let qubit = self.qubit.expect("qubit must be set before calling default_coords");
         self.y_pos = Some(qubit as f64);
-        self.x_pos = Some(1.0);
+        self.x_pos = Some(0.0);
         self
     }
 
