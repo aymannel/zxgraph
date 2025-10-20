@@ -2,7 +2,7 @@ mod graph;
 mod vertex;
 pub mod phase;
 
-pub use graph::BaseGraph;
+pub use graph::Graph;
 pub use vertex::{Vertex, VertexBuilder, VertexType};
 
 

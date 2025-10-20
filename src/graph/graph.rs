@@ -4,18 +4,18 @@ use petgraph::stable_graph::{EdgeReferences, NodeReferences};
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
 
 #[derive(Debug, Clone)]
-pub struct BaseGraph {
-    graph: StableUnGraph<Vertex, EdgeType>,
+pub struct Graph {
+    base_graph: StableUnGraph<Vertex, EdgeType>,
     inputs: Vec<Option<NodeIndex>>,
     outputs: Vec<Option<NodeIndex>>,
     capacity: usize,
 }
 
-impl BaseGraph {
+impl Graph {
     /// Creates an empty graph
     pub fn new(capacity: usize) -> Self {
-        BaseGraph {
-            graph: StableUnGraph::with_capacity(2 * capacity, capacity),
+        Graph {
+            base_graph: StableUnGraph::with_capacity(2 * capacity, capacity),
             inputs: Vec::with_capacity(capacity),
             outputs: Vec::with_capacity(capacity),
             capacity,
@@ -36,7 +36,7 @@ impl BaseGraph {
     /// Adds new input boundary node
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
         self.ensure_capacity(qubit);
-        let input = self.graph.add_node(VertexBuilder::b()
+        let input = self.base_graph.add_node(VertexBuilder::b()
             .qubit(qubit)
             .qubit_coords()
             .x_pos(-1.0)
@@ -50,7 +50,7 @@ impl BaseGraph {
     /// Adds new output boundary
     pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
         self.ensure_capacity(qubit);
-        let output = self.graph.add_node(VertexBuilder::b()
+        let output = self.base_graph.add_node(VertexBuilder::b()
             .qubit(qubit)
             .qubit_coords()
             .x_pos(1.0)
@@ -64,7 +64,7 @@ impl BaseGraph {
     pub fn add_wire(&mut self, qubit: usize) {
         self.ensure_capacity(qubit);
         match (self.input(qubit), self.output(qubit)) {
-            (Some(input), Some(output)) => if !self.graph.contains_edge(input, output) {
+            (Some(input), Some(output)) => if !self.base_graph.contains_edge(input, output) {
                 self.add_edge(input, output)
             },
             (Some(input), None) => {
@@ -104,42 +104,42 @@ impl BaseGraph {
     
     /// Returns vertex by NodeIndex
     pub fn get_vertex(&self, index: NodeIndex) -> Option<&Vertex> {
-        self.graph.node_weight(index)
+        self.base_graph.node_weight(index)
     }
 
     /// Returns optional Vertex by NodeIndex
     pub fn get_edge_index(&self, source: NodeIndex, target: NodeIndex) -> Option<EdgeIndex> {
-        self.graph.find_edge(source, target)
+        self.base_graph.find_edge(source, target)
     }
 
     /// Returns all enumerated vertices in graph
     pub fn enumerate_vertices(&self) -> NodeReferences<'_, Vertex> {
-        self.graph.node_references()
+        self.base_graph.node_references()
     }
 
     /// Returns all enumerated edges in graph
     pub fn enumerate_edges(&self) -> EdgeReferences<'_, EdgeType> {
-        self.graph.edge_references()
+        self.base_graph.edge_references()
     }
 
     /// Returns total number of vertices
     pub fn num_vertices(&self) -> usize {
-        self.graph.node_count()
+        self.base_graph.node_count()
     }
 
     /// Returns total number of edges
     pub fn num_edges(&self) -> usize {
-        self.graph.edge_count()
+        self.base_graph.edge_count()
     }
 
     /// Returns all vertices in graph
     pub fn vertices(&self) -> impl Iterator<Item=&Vertex> {
-        self.graph.node_weights()
+        self.base_graph.node_weights()
     }
 
     /// Returns all edges in graph
     pub fn edges(&self) -> impl Iterator<Item=&EdgeType> {
-        self.graph.edge_weights()
+        self.base_graph.edge_weights()
     }
 
     /// Returns indices of inputs
@@ -170,7 +170,18 @@ impl BaseGraph {
     /// Adds new vertex
     pub fn add_vertex(&mut self, vertex: Vertex) -> NodeIndex {
         self.ensure_capacity(vertex.qubit());
-        self.graph.add_node(vertex)
+        self.base_graph.add_node(vertex)
+    }
+
+    /// Adds new vertex and wire along the specified qubit
+    pub fn add_vertex_on_wire(&mut self, vertex: Vertex) -> NodeIndex {
+        self.ensure_capacity(vertex.qubit());
+        let input = self.add_input(vertex.qubit());
+        let output = self.add_output(vertex.qubit());
+        let vertex = self.add_vertex(vertex);
+        self.add_edge(input, vertex);
+        self.add_edge(output, vertex);
+        vertex
     }
 
     /// Adds new edge between two vertices
@@ -180,17 +191,17 @@ impl BaseGraph {
 
     /// Adds new edge with specified type between two vertices
     pub fn add_edge_of_type(&mut self, source: NodeIndex, target: NodeIndex, edge_type: EdgeType) {
-        self.graph.add_edge(source, target, edge_type);
+        self.base_graph.add_edge(source, target, edge_type);
     }
 
     /// Removes vertex with specified index
     pub fn remove_vertex(&mut self, index: NodeIndex) {
-        self.graph.remove_node(index);
+        self.base_graph.remove_node(index);
     }
 
     /// Removes edge between two vertices
     pub fn remove_edge(&mut self, source: NodeIndex, target: NodeIndex) {
-        self.graph.remove_edge(self.graph
+        self.base_graph.remove_edge(self.base_graph
             .find_edge(source, target)
             .expect("No edge found.")
         );
@@ -224,7 +235,7 @@ mod tests {
     #[test]
     fn can_create_base_graph_with_capacity() {
         // When
-        let mut graph = BaseGraph::new(3);
+        let mut graph = Graph::new(3);
         graph.add_wires(0..3);
 
         // Then
@@ -237,7 +248,7 @@ mod tests {
     #[test]
     fn can_add_vertex() {
         // When
-        let mut graph = BaseGraph::new(1);
+        let mut graph = Graph::new(1);
         graph.add_wire(1);
 
         // Then
@@ -259,7 +270,7 @@ mod tests {
 
     #[test]
     fn can_add_edge() {
-        let mut graph = BaseGraph::new(1);
+        let mut graph = Graph::new(1);
         graph.add_wire(1);
 
         assert_eq!(graph.num_edges(), 1);

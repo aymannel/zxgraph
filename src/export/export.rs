@@ -1,12 +1,12 @@
 use crate::export::Exportable;
-use crate::graph::{BaseGraph, EdgeType, VertexType};
+use crate::graph::{Graph, EdgeType, VertexType};
 use petgraph::prelude::EdgeRef;
 use std::error::Error;
 use std::fmt::Write;
 use std::fs;
 use std::process::Command;
 
-impl Exportable for BaseGraph {
+impl Exportable for Graph {
     fn to_tex(&self, name: &str) -> Result<(), Box<dyn Error>> {
         // Add vertices
         let mut vertices = String::new();
@@ -99,7 +99,12 @@ mod tests {
 
     #[test]
     fn can_export_gadget() {
-        let graph = GraphBuilder::gadget("XYYZ", Phase::minus());
+        let graph = GraphBuilder::gadget("XYZ", Phase::minus());
+        assert_eq!(graph.capacity(), 3);
+        assert_eq!(graph.num_inputs(), 3);
+        assert_eq!(graph.num_outputs(), 3);
+        assert_eq!(graph.num_vertices(), 10);
+        assert_eq!(graph.num_edges(), 9);
         export_and_open!(graph, "gadget.tex");
     }
 

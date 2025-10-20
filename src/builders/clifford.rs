@@ -1,35 +1,25 @@
 use crate::builders::{Clifford, GraphBuilder};
-use crate::graph::{BaseGraph, VertexBuilder};
+use crate::graph::{Graph, VertexBuilder};
 use std::cmp::max;
 
 impl Clifford for GraphBuilder {
     /// Builder: Generates a BaseGraph instance of a CX gate
-    fn cx(control: usize, target: usize) -> BaseGraph {
+    fn cx(control: usize, target: usize) -> Graph {
         assert_ne!(control, target);
         let capacity = max(control, target) + 1;
-        let mut graph = BaseGraph::new(capacity);
+        let mut graph = Graph::new(capacity);
 
-        let z = graph.add_vertex(VertexBuilder::z()
+        let z = graph.add_vertex_on_wire(VertexBuilder::z()
             .qubit(control)
             .qubit_coords()
             .build()
         );
 
-        let x = graph.add_vertex(VertexBuilder::x()
+        let x = graph.add_vertex_on_wire(VertexBuilder::x()
             .qubit(target)
             .qubit_coords()
             .build()
         );
-
-        let control_input = graph.add_input(control);
-        let control_output = graph.add_output(control);
-        graph.add_edge(control_input, z);
-        graph.add_edge(control_output, z);
-
-        let target_input = graph.add_input(target);
-        let target_output = graph.add_output(target);
-        graph.add_edge(target_input, x);
-        graph.add_edge(target_output, x);
 
         graph.add_wires_excluding(0..capacity, [target, control]);
         graph.add_edge(z, x);
@@ -37,32 +27,22 @@ impl Clifford for GraphBuilder {
     }
 
     /// Builder: Generates a BaseGraph instance of a CZ gate
-    fn cz(control: usize, target: usize) -> BaseGraph {
+    fn cz(control: usize, target: usize) -> Graph {
         assert_ne!(control, target);
         let capacity = max(control, target) + 1;
-        let mut graph = BaseGraph::new(capacity);
+        let mut graph = Graph::new(capacity);
 
-        let z1 = graph.add_vertex(VertexBuilder::z()
+        let z1 = graph.add_vertex_on_wire(VertexBuilder::z()
             .qubit(control)
             .qubit_coords()
             .build()
         );
 
-        let z2 = graph.add_vertex(VertexBuilder::z()
+        let z2 = graph.add_vertex_on_wire(VertexBuilder::z()
             .qubit(target)
             .qubit_coords()
             .build()
         );
-
-        let control_input = graph.add_input(control);
-        let control_output = graph.add_output(control);
-        graph.add_edge(control_input, z1);
-        graph.add_edge(control_output, z1);
-
-        let target_input = graph.add_input(target);
-        let target_output = graph.add_output(target);
-        graph.add_edge(target_input, z2);
-        graph.add_edge(target_output, z2);
 
         graph.add_wires_excluding(0..capacity, [target, control]);
         graph.add_edge(z1, z2);
@@ -70,116 +50,117 @@ impl Clifford for GraphBuilder {
     }
 
     /// Builder: Generates a BaseGraph instance of a z plus gate
-    fn z_plus(qubit: usize) -> BaseGraph {
+    fn z_plus(qubit: usize) -> Graph {
         let capacity = qubit + 1;
-        let mut graph = BaseGraph::new(capacity);
-        graph.add_wires_excluding(0..capacity, [qubit]);
+        let mut graph = Graph::new(capacity);
 
-        let vertex = graph.add_vertex(VertexBuilder::z_plus()
+        graph.add_wires_excluding(0..capacity, [qubit]);
+        graph.add_vertex_on_wire(VertexBuilder::z_plus()
             .qubit(qubit)
             .qubit_coords()
             .build()
         );
 
-        let input = graph.input(qubit).unwrap();
-        let output = graph.output(qubit).unwrap();
-        graph.add_edge(input, vertex);
-        graph.add_edge(output, vertex);
         graph
     }
 
     /// Builder: Generates a BaseGraph instance of a z minus gate
-    fn z_minus(qubit: usize) -> BaseGraph {
+    fn z_minus(qubit: usize) -> Graph {
         let capacity = qubit + 1;
-        let mut graph = BaseGraph::new(capacity);
-        graph.add_wires_excluding(0..capacity, [qubit]);
+        let mut graph = Graph::new(capacity);
 
-        let vertex = graph.add_vertex(VertexBuilder::z_minus()
+        graph.add_wires_excluding(0..capacity, [qubit]);
+        graph.add_vertex_on_wire(VertexBuilder::z_minus()
             .qubit(qubit)
             .qubit_coords()
             .build()
         );
 
-        let input = graph.add_input(qubit);
-        let output = graph.add_output(qubit);
-        graph.add_edge(input, vertex);
-        graph.add_edge(output, vertex);
         graph
     }
 
     /// Builder: Generates a BaseGraph instance of a x plus gate
-    fn x_plus(qubit: usize) -> BaseGraph {
+    fn x_plus(qubit: usize) -> Graph {
         let capacity = qubit + 1;
-        let mut graph = BaseGraph::new(capacity);
-        graph.add_wires_excluding(0..capacity, [qubit]);
+        let mut graph = Graph::new(capacity);
 
-        let vertex = graph.add_vertex(VertexBuilder::x_plus()
+        graph.add_wires_excluding(0..capacity, [qubit]);
+        graph.add_vertex_on_wire(VertexBuilder::x_plus()
             .qubit(qubit)
             .qubit_coords()
             .build()
         );
 
-        let input = graph.add_input(qubit);
-        let output = graph.add_output(qubit);
-        graph.add_edge(input, vertex);
-        graph.add_edge(output, vertex);
         graph
     }
 
     /// Builder: Generates a BaseGraph instance of a x minus gate
-    fn x_minus(qubit: usize) -> BaseGraph {
+    fn x_minus(qubit: usize) -> Graph {
         let capacity = qubit + 1;
-        let mut graph = BaseGraph::new(capacity);
-        graph.add_wires_excluding(0..capacity, [qubit]);
+        let mut graph = Graph::new(capacity);
 
-        let vertex = graph.add_vertex(VertexBuilder::x_minus()
+        graph.add_wires_excluding(0..capacity, [qubit]);
+        graph.add_vertex_on_wire(VertexBuilder::x_minus()
             .qubit(qubit)
             .qubit_coords()
             .build()
         );
 
-        let input = graph.add_input(qubit);
-        let output = graph.add_output(qubit);
-        graph.add_edge(input, vertex);
-        graph.add_edge(output, vertex);
         graph
     }
 
     /// Builder: Generates a BaseGraph instance of a y plus gate
-    fn y_plus(qubit: usize) -> BaseGraph {
+    fn y_plus(qubit: usize) -> Graph {
         let capacity = qubit + 1;
-        let mut graph = BaseGraph::new(capacity);
-        graph.add_wires_excluding(0..capacity, [qubit]);
+        let mut graph = Graph::new(capacity);
 
-        let vertex = graph.add_vertex(VertexBuilder::y_plus()
+        graph.add_wires_excluding(0..capacity, [qubit]);
+        graph.add_vertex_on_wire(VertexBuilder::y_plus()
             .qubit(qubit)
             .qubit_coords()
             .build()
         );
 
-        let input = graph.add_input(qubit);
-        let output = graph.add_output(qubit);
-        graph.add_edge(input, vertex);
-        graph.add_edge(output, vertex);
         graph
     }
 
     /// Builder: Generates a BaseGraph instance of a y minus gate
-    fn y_minus(qubit: usize) -> BaseGraph {
+    fn y_minus(qubit: usize) -> Graph {
         let capacity = qubit + 1;
-        let mut graph = BaseGraph::new(capacity);
-        graph.add_wires_excluding(0..capacity, [qubit]);
+        let mut graph = Graph::new(capacity);
 
-        let vertex = graph.add_vertex(VertexBuilder::y_minus()
+        graph.add_wires_excluding(0..capacity, [qubit]);
+        graph.add_vertex_on_wire(VertexBuilder::y_minus()
             .qubit(qubit)
             .qubit_coords()
             .build()
         );
 
-        let input = graph.add_input(qubit);
-        let output = graph.add_output(qubit);
-        graph.add_edge(input, vertex);
-        graph.add_edge(output, vertex);
         graph
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::builders::{Clifford, GraphBuilder};
+
+    #[test]
+    fn cx_base_test() {
+        let cx = GraphBuilder::cx(0, 1);
+        assert_eq!(cx.capacity(), 2);
+        assert_eq!(cx.num_inputs(), 2);
+        assert_eq!(cx.num_outputs(), 2);
+        assert_eq!(cx.num_vertices(), 6);
+        assert_eq!(cx.num_edges(), 5);
+    }
+
+    #[test]
+    fn cz_base_test() {
+        let cz = GraphBuilder::cz(0, 1);
+        assert_eq!(cz.capacity(), 2);
+        assert_eq!(cz.num_inputs(), 2);
+        assert_eq!(cz.num_outputs(), 2);
+        assert_eq!(cz.num_vertices(), 6);
+        assert_eq!(cz.num_edges(), 5);
     }
 }
