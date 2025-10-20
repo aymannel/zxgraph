@@ -1,77 +1,115 @@
 use crate::graph::{EdgeType, Vertex, VertexBuilder};
-use petgraph::prelude::{NodeIndex, StableUnGraph};
+use petgraph::prelude::{EdgeIndex, NodeIndex, StableUnGraph};
 use petgraph::stable_graph::{EdgeReferences, NodeReferences};
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
 
 #[derive(Debug, Clone)]
 pub struct BaseGraph {
     graph: StableUnGraph<Vertex, EdgeType>,
-    inputs: Vec<NodeIndex>,
-    outputs: Vec<NodeIndex>,
+    inputs: Vec<Option<NodeIndex>>,
+    outputs: Vec<Option<NodeIndex>>,
+    capacity: usize,
 }
 
 impl BaseGraph {
     /// Creates an empty graph
-    pub fn new() -> Self {
+    pub fn new(capacity: usize) -> Self {
         BaseGraph {
-            graph: StableUnGraph::with_capacity(0, 0),
-            inputs: Vec::new(),
-            outputs: Vec::new(),
+            graph: StableUnGraph::with_capacity(2 * capacity, capacity),
+            inputs: Vec::with_capacity(capacity),
+            outputs: Vec::with_capacity(capacity),
+            capacity,
         }
     }
 
+    /// Resizes input, output and capacity exactly enough to hold qubit
+    pub fn ensure_capacity(&mut self, qubit: usize) {
+        let target_capacity = qubit + 1;
+        if self.inputs.len() < target_capacity {
+            self.inputs.resize(target_capacity, None);
+            self.outputs.resize(target_capacity, None);
+            self.capacity = target_capacity;
+        }
+    }
+
+    // todo - left of non-boundary nodes
     /// Adds new input boundary node
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
-        let node = self.graph.add_node(VertexBuilder::b()
+        self.ensure_capacity(qubit);
+        let input = self.graph.add_node(VertexBuilder::b()
             .qubit(qubit)
             .qubit_coords()
             .x_pos(-1.0)
             .build()
         );
-        self.inputs.push(node);
-        node
+        self.inputs[qubit] = Some(input);
+        input
     }
 
-    // todo - check depth / perhaps create Layout class?
+    // todo - right of non-boundary nodes
     /// Adds new output boundary
     pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
-        let vertex = self.graph.add_node(VertexBuilder::b()
+        self.ensure_capacity(qubit);
+        let output = self.graph.add_node(VertexBuilder::b()
             .qubit(qubit)
             .qubit_coords()
             .x_pos(1.0)
-            .build());
-        self.outputs.push(vertex);
-        vertex
+            .build()
+        );
+        self.outputs[qubit] = Some(output);
+        output
     }
 
     /// Adds a single wire along the specified qubit
     pub fn add_wire(&mut self, qubit: usize) {
-        // todo - Do nothing if already exists. See StableGraph::contains_edge()
-        let input = self.add_input(qubit);
-        let output = self.add_output(qubit);
-        self.add_edge(input, output);
+        self.ensure_capacity(qubit);
+        match (self.input(qubit), self.output(qubit)) {
+            (Some(input), Some(output)) => if !self.graph.contains_edge(input, output) {
+                self.add_edge(input, output)
+            },
+            (Some(input), None) => {
+                let output = self.add_output(qubit);
+                self.add_edge(input, output)
+            },
+            (None, Some(output)) => {
+                let input = self.add_input(qubit);
+                self.add_edge(input, output)
+            },
+            (None, None) => {
+                let input = self.add_input(qubit);
+                let output = self.add_output(qubit);
+                self.add_edge(input, output)
+            }
+        }
     }
 
     /// Adds wires along the specified qubits
-    pub fn add_wires_along_qubits(&mut self, qubits: impl IntoIterator<Item = usize>) {
+    pub fn add_wires(&mut self, qubits: impl IntoIterator<Item = usize>) {
         for qubit in qubits {
             self.add_wire(qubit);
         }
     }
 
-    // todo - improve me!
-    /// Returns maximum qubit
-    pub fn max_qubit(&self) -> usize {
-        self.inputs().iter()
-            .filter_map(|&index| self.graph.node_weight(index))
-            .map(|vertex| vertex.qubit())
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap()
+    /// Adds wires along the specified qubits excluding specified qubits
+    pub fn add_wires_excluding<I, E>(&mut self, qubits: I, excluded: E)
+    where
+        I: IntoIterator<Item = usize>,
+        E: IntoIterator<Item = usize>,
+    {
+        let excluded: Vec<_> = excluded.into_iter().collect();
+        self.add_wires(
+            qubits.into_iter().filter(|i| !excluded.contains(i))
+        );
     }
-
+    
     /// Returns vertex by NodeIndex
     pub fn get_vertex(&self, index: NodeIndex) -> Option<&Vertex> {
         self.graph.node_weight(index)
+    }
+
+    /// Returns optional Vertex by NodeIndex
+    pub fn get_edge_index(&self, source: NodeIndex, target: NodeIndex) -> Option<EdgeIndex> {
+        self.graph.find_edge(source, target)
     }
 
     /// Returns all enumerated vertices in graph
@@ -83,6 +121,7 @@ impl BaseGraph {
     pub fn enumerate_edges(&self) -> EdgeReferences<'_, EdgeType> {
         self.graph.edge_references()
     }
+
     /// Returns total number of vertices
     pub fn num_vertices(&self) -> usize {
         self.graph.node_count()
@@ -104,13 +143,18 @@ impl BaseGraph {
     }
 
     /// Returns indices of inputs
-    pub fn inputs(&self) -> &[NodeIndex] {
+    pub fn inputs(&self) -> &[Option<NodeIndex>] {
         &self.inputs
     }
 
     /// Returns indices of outputs
-    pub fn outputs(&self) -> &[NodeIndex] {
+    pub fn outputs(&self) -> &[Option<NodeIndex>] {
         &self.outputs
+    }
+
+    /// Returns graph capacity
+    pub fn capacity(&self) -> usize {
+        self.capacity
     }
 
     /// Returns number of inputs
@@ -125,6 +169,7 @@ impl BaseGraph {
 
     /// Adds new vertex
     pub fn add_vertex(&mut self, vertex: Vertex) -> NodeIndex {
+        self.ensure_capacity(vertex.qubit());
         self.graph.add_node(vertex)
     }
 
@@ -153,20 +198,22 @@ impl BaseGraph {
 
     /// Removes edge between input and output vertices along specified qubit
     pub fn remove_wire(&mut self, qubit: usize) {
-        self.remove_edge(
-            self.inputs()[qubit],
-            self.outputs()[qubit]
-        );
+        self.ensure_capacity(qubit);
+        if let (Some(input), Some(output)) = (self.input(qubit), self.output(qubit)) {
+            self.remove_edge(input, output);
+        }
     }
 
-    /// Inserts vertex on the edge connecting and input along specified qubit
-    pub fn add_vertex_to_wire(&mut self, vertex: Vertex) -> NodeIndex {
-        let qubit = vertex.qubit();
-        let index = self.add_vertex(vertex);
-        self.add_edge(self.inputs()[qubit], index);
-        self.add_edge(self.outputs()[qubit], index);
-        self.remove_wire(qubit);
-        index
+    /// Returns NodeIndex if input exists at qubit
+    pub fn input(&mut self, qubit: usize) -> Option<NodeIndex> {
+        assert!(qubit < self.inputs.len(), "qubit index larger than input size");
+        self.inputs[qubit]
+    }
+
+    /// Returns NodeIndex if output exists at qubit
+    pub fn output(&mut self, qubit: usize) -> Option<NodeIndex> {
+        assert!(qubit < self.inputs.len(), "qubit index larger than output size");
+        self.outputs[qubit]
     }
 }
 
@@ -177,8 +224,8 @@ mod tests {
     #[test]
     fn can_create_base_graph_with_capacity() {
         // When
-        let mut graph = BaseGraph::new();
-        graph.add_wires_along_qubits(0..3);
+        let mut graph = BaseGraph::new(3);
+        graph.add_wires(0..3);
 
         // Then
         assert_eq!(graph.num_vertices(), 6);
@@ -190,7 +237,7 @@ mod tests {
     #[test]
     fn can_add_vertex() {
         // When
-        let mut graph = BaseGraph::new();
+        let mut graph = BaseGraph::new(1);
         graph.add_wire(1);
 
         // Then
@@ -212,7 +259,7 @@ mod tests {
 
     #[test]
     fn can_add_edge() {
-        let mut graph = BaseGraph::new();
+        let mut graph = BaseGraph::new(1);
         graph.add_wire(1);
 
         assert_eq!(graph.num_edges(), 1);

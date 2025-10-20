@@ -15,11 +15,6 @@ pub struct Vertex {
 }
 
 impl Vertex {
-    /// Builder: Returns instance of VertexBuilder
-    pub fn builder() -> VertexBuilder {
-        VertexBuilder::new()
-    }
-
     /// Getter: Returns vertex_type
     pub fn vertex_type(&self) -> &VertexType {
         &self.vertex_type

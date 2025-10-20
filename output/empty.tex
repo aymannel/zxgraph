@@ -1,0 +1,112 @@
+\documentclass{article}
+\pagestyle{empty}
+
+\usepackage[active,tightpage]{preview}
+\usepackage{pgfplots}
+\usepackage{color}
+\usepackage{tikz}
+
+\PreviewEnvironment[]{tikzpicture}
+\setlength\PreviewBorder{10pt}
+
+\pgfdeclarelayer{nodelayer}
+\pgfdeclarelayer{edgelayer}
+\pgfsetlayers{edgelayer,nodelayer,main}
+
+\pgfplotsset{compat=newest, compat/show suggested version=false}
+
+% Define colours
+\definecolor{z_color}{RGB}{216,248,216}
+\definecolor{x_color}{RGB}{232,165,165}
+\definecolor{y_color}{RGB}{88,184,244}
+\definecolor{h_color}{RGB}{255,215,0}
+
+% Define edge style
+\tikzstyle{simple_edge}=[draw=black]
+\tikzstyle{hadamard_edge}=[-, dashed, draw=blue]
+
+% Define node style
+\tikzstyle{boundary}=[draw=black, shape=circle, scale=0.3, fill=black, font={\footnotesize}]
+\tikzstyle{hadamard}=[box, draw=black, shape=rectangle, fill={h_color}, minimum size=.55em]
+\tikzstyle{z_node}=[draw=black, shape=circle, fill={z_color}, inner sep=0.7mm, minimum width=0pt, minimum height=0pt]
+\tikzstyle{x_node}=[{z_node}, fill={x_color}, draw=black]
+\tikzstyle{x_phase}=[{z_phase}, fill={x_color}, draw=black]
+
+\tikzstyle{z_phase}=[
+    shape=rectangle,
+    fill={z_color},
+    draw=black,
+    minimum size=1.2em,
+    rounded corners=0.5em,
+    inner sep=0.2em,
+    outer sep=-0.2em,
+    scale=0.8,
+    font={\footnotesize}
+]
+
+\tikzstyle{y_node}=[
+    circle,
+    draw=black,
+    minimum width=2mm,
+    minimum height=2mm,
+    inner sep=0.7mm,
+    path picture={
+        \fill[fill=x_color]
+        (path picture bounding box.south west) --
+        (path picture bounding box.north east) --
+        (path picture bounding box.north west) -- cycle;
+        \fill[fill=z_color]
+        (path picture bounding box.south west) --
+        (path picture bounding box.south east) --
+        (path picture bounding box.north east) -- cycle;
+    }
+]
+
+\tikzstyle{y_phase}=[
+    shape=rectangle,
+    draw=black,
+    minimum size=1.2em,
+    rounded corners=0.5em,
+    inner sep=0.2em,
+    outer sep=-0.2em,
+    scale=0.8,
+    font={\footnotesize},
+    fill={z_color},
+    path picture={
+        \fill[sharp corners, x_color]
+        (path picture bounding box.south west) --
+        (path picture bounding box.north east) --
+        (path picture bounding box.north west) -- cycle;
+        \fill[sharp corners, z_color]
+        (path picture bounding box.south west) --
+        (path picture bounding box.south east) --
+        (path picture bounding box.north east) -- cycle;
+    }
+]
+
+% Begin template
+\begin{document}
+    \begin{tikzpicture}[scale=0.5]
+        \begin{pgfonlayer}{nodelayer}
+			\node [style=boundary] (0) at (0.00, -0.00) {};
+			\node [style=boundary] (1) at (2.00, -0.00) {};
+			\node [style=boundary] (2) at (0.00, -1.00) {};
+			\node [style=boundary] (3) at (2.00, -1.00) {};
+			\node [style=boundary] (4) at (0.00, -2.00) {};
+			\node [style=boundary] (5) at (2.00, -2.00) {};
+			\node [style=boundary] (6) at (0.00, -3.00) {};
+			\node [style=boundary] (7) at (2.00, -3.00) {};
+			\node [style=boundary] (8) at (0.00, -4.00) {};
+			\node [style=boundary] (9) at (2.00, -4.00) {};
+
+        \end{pgfonlayer}
+        \begin{pgfonlayer}{edgelayer}
+			\draw [style=simple_edge] (0) to (1);
+			\draw [style=simple_edge] (2) to (3);
+			\draw [style=simple_edge] (4) to (5);
+			\draw [style=simple_edge] (6) to (7);
+			\draw [style=simple_edge] (8) to (9);
+
+        \end{pgfonlayer}
+    \end{tikzpicture}
+\end{document}
