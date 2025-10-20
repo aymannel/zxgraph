@@ -25,16 +25,22 @@ impl Graph {
     /// Resizes input, output and capacity exactly enough to hold qubit
     pub fn ensure_capacity(&mut self, qubit: usize) {
         let target_capacity = qubit + 1;
-        if self.inputs.len() < target_capacity {
+        if self.num_inputs() < target_capacity {
             self.inputs.resize(target_capacity, None);
             self.outputs.resize(target_capacity, None);
             self.capacity = target_capacity;
         }
     }
 
-    // todo - left of non-boundary nodes
+    /// Asserts graph health
+    fn assert_health(&self) {
+        assert!(self.capacity() > self.num_inputs());
+        assert_eq!(self.num_inputs(), self.num_outputs());
+    }
+
     /// Adds new input boundary node
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
+        self.assert_health();
         self.ensure_capacity(qubit);
         let input = self.base_graph.add_node(VertexBuilder::b()
             .qubit(qubit)
@@ -46,7 +52,6 @@ impl Graph {
         input
     }
 
-    // todo - right of non-boundary nodes
     /// Adds new output boundary
     pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
         self.ensure_capacity(qubit);
@@ -217,13 +222,13 @@ impl Graph {
 
     /// Returns NodeIndex if input exists at qubit
     pub fn input(&mut self, qubit: usize) -> Option<NodeIndex> {
-        assert!(qubit < self.inputs.len(), "qubit index larger than input size");
+        assert!(qubit < self.num_inputs(), "qubit index larger than input size");
         self.inputs[qubit]
     }
 
     /// Returns NodeIndex if output exists at qubit
     pub fn output(&mut self, qubit: usize) -> Option<NodeIndex> {
-        assert!(qubit < self.inputs.len(), "qubit index larger than output size");
+        assert!(qubit < self.num_outputs(), "qubit index larger than output size");
         self.outputs[qubit]
     }
 }

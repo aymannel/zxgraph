@@ -15,13 +15,13 @@ pub trait Gadget {
 
 pub trait Pauli {
     /// Creates an instance of BaseGraph representing Pauli Z
-    fn z_pauli(qubit: usize) -> Graph;
+    fn pauli_z(qubit: usize) -> Graph;
 
     /// Creates an instance of BaseGraph representing Pauli X
-    fn x_pauli(qubit: usize) -> Graph;
+    fn pauli_x(qubit: usize) -> Graph;
 
     /// Creates an instance of BaseGraph representing Pauli Y
-    fn y_pauli(qubit: usize) -> Graph;
+    fn pauli_y(qubit: usize) -> Graph;
 }
 
 pub trait Clifford {

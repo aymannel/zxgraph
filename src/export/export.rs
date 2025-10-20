@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn can_export_pauli_y() {
-        let graph = GraphBuilder::y_pauli(1);
+        let graph = GraphBuilder::pauli_y(1);
         export_and_open!(graph, "pauli_y.tex");
     }
 
