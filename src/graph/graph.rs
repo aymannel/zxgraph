@@ -23,8 +23,7 @@ impl Graph {
     }
 
     /// Resizes input, output and capacity exactly enough to hold qubit
-    pub fn ensure_capacity(&mut self, qubit: usize) {
-        let target_capacity = qubit + 1;
+    pub fn ensure_capacity(&mut self, target_capacity: usize) {
         if self.num_inputs() < target_capacity {
             self.inputs.resize(target_capacity, None);
             self.outputs.resize(target_capacity, None);
@@ -32,16 +31,9 @@ impl Graph {
         }
     }
 
-    /// Asserts graph health
-    fn assert_health(&self) {
-        assert!(self.capacity() > self.num_inputs());
-        assert_eq!(self.num_inputs(), self.num_outputs());
-    }
-
     /// Adds new input boundary node
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
-        self.assert_health();
-        self.ensure_capacity(qubit);
+        self.ensure_capacity(qubit + 1);
         let input = self.base_graph.add_node(VertexBuilder::b()
             .qubit(qubit)
             .qubit_coords()
@@ -54,7 +46,7 @@ impl Graph {
 
     /// Adds new output boundary
     pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
-        self.ensure_capacity(qubit);
+        self.ensure_capacity(qubit + 1);
         let output = self.base_graph.add_node(VertexBuilder::b()
             .qubit(qubit)
             .qubit_coords()
@@ -67,24 +59,18 @@ impl Graph {
 
     /// Adds a single wire along the specified qubit
     pub fn add_wire(&mut self, qubit: usize) {
-        self.ensure_capacity(qubit);
+        self.ensure_capacity(qubit + 1);
         match (self.input(qubit), self.output(qubit)) {
-            (Some(input), Some(output)) => if !self.base_graph.contains_edge(input, output) {
-                self.add_edge(input, output)
-            },
-            (Some(input), None) => {
-                let output = self.add_output(qubit);
-                self.add_edge(input, output)
-            },
-            (None, Some(output)) => {
-                let input = self.add_input(qubit);
-                self.add_edge(input, output)
-            },
+            (Some(input), Some(output)) =>
+                if !self.base_graph.contains_edge(input, output) {
+                    self.add_edge(input, output)
+                }
             (None, None) => {
                 let input = self.add_input(qubit);
                 let output = self.add_output(qubit);
                 self.add_edge(input, output)
             }
+            _ => panic!("input and output mismatch at qubit index {qubit}"),
         }
     }
 
@@ -174,13 +160,12 @@ impl Graph {
 
     /// Adds new vertex
     pub fn add_vertex(&mut self, vertex: Vertex) -> NodeIndex {
-        self.ensure_capacity(vertex.qubit());
+        self.ensure_capacity(vertex.qubit() + 1);
         self.base_graph.add_node(vertex)
     }
 
     /// Adds new vertex and wire along the specified qubit
     pub fn add_vertex_on_wire(&mut self, vertex: Vertex) -> NodeIndex {
-        self.ensure_capacity(vertex.qubit());
         let input = self.add_input(vertex.qubit());
         let output = self.add_output(vertex.qubit());
         let vertex = self.add_vertex(vertex);
@@ -214,7 +199,6 @@ impl Graph {
 
     /// Removes edge between input and output vertices along specified qubit
     pub fn remove_wire(&mut self, qubit: usize) {
-        self.ensure_capacity(qubit);
         if let (Some(input), Some(output)) = (self.input(qubit), self.output(qubit)) {
             self.remove_edge(input, output);
         }
