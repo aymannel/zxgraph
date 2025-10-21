@@ -20,7 +20,7 @@ impl Gadget for GraphBuilder {
                 'x' => Some(VertexBuilder::x()),
                 'y' => Some(VertexBuilder::y()),
                 'i' => {None},
-                _ => panic!("invalid pauli character!")
+                _ => panic!("invalid pauli character")
             };
 
             if let Some(builder) = opt_builder {
@@ -29,12 +29,34 @@ impl Gadget for GraphBuilder {
                     .qubit_coords()
                     .build()
                 );
-
                 graph.add_edge(vertex, hub);
             } else {
                 graph.add_wire(qubit);
             }
         }
         graph
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::builders::{Gadget, GraphBuilder, Pauli};
+    use crate::graph::phase::Phase;
+
+    #[test]
+    #[should_panic("invalid pauli character")]
+    fn should_panic_when_invalid_pauli_character() {
+        GraphBuilder::gadget("ZXH", Phase::zero());
+    }
+
+    #[test]
+    fn gadget() {
+        let gadget = GraphBuilder::gadget("zxy", Phase::zero());
+        assert_eq!(gadget.capacity(), 3);
+        assert_eq!(gadget.num_inputs(), 3);
+        assert_eq!(gadget.num_outputs(), 3);
+        assert_eq!(gadget.num_vertices(), 10);
+        assert_eq!(gadget.num_edges(), 9);
     }
 }

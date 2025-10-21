@@ -100,11 +100,6 @@ mod tests {
     #[test]
     fn can_export_gadget() {
         let graph = GraphBuilder::gadget("XYZ", Phase::minus());
-        assert_eq!(graph.capacity(), 3);
-        assert_eq!(graph.num_inputs(), 3);
-        assert_eq!(graph.num_outputs(), 3);
-        assert_eq!(graph.num_vertices(), 10);
-        assert_eq!(graph.num_edges(), 9);
         export_and_open!(graph, "gadget.tex");
     }
 
