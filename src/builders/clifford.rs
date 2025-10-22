@@ -148,7 +148,6 @@ mod tests {
     #[test]
     fn cx() {
         let cx = GraphBuilder::cx(0, 1);
-        assert_eq!(cx.capacity(), 2);
         assert_eq!(cx.num_inputs(), 2);
         assert_eq!(cx.num_outputs(), 2);
         assert_eq!(cx.num_vertices(), 6);
@@ -158,7 +157,6 @@ mod tests {
     #[test]
     fn cz() {
         let cz = GraphBuilder::cz(0, 1);
-        assert_eq!(cz.capacity(), 2);
         assert_eq!(cz.num_inputs(), 2);
         assert_eq!(cz.num_outputs(), 2);
         assert_eq!(cz.num_vertices(), 6);
@@ -168,7 +166,6 @@ mod tests {
     #[test]
     fn z_plus() {
         let z_plus = GraphBuilder::z_plus(0);
-        assert_eq!(z_plus.capacity(), 1);
         assert_eq!(z_plus.num_inputs(), 1);
         assert_eq!(z_plus.num_outputs(), 1);
         assert_eq!(z_plus.num_vertices(), 3);
@@ -178,7 +175,6 @@ mod tests {
     #[test]
     fn x_plus() {
         let x_plus = GraphBuilder::x_plus(0);
-        assert_eq!(x_plus.capacity(), 1);
         assert_eq!(x_plus.num_inputs(), 1);
         assert_eq!(x_plus.num_outputs(), 1);
         assert_eq!(x_plus.num_vertices(), 3);
@@ -188,7 +184,6 @@ mod tests {
     #[test]
     fn y_plus() {
         let y_plus = GraphBuilder::y_plus(0);
-        assert_eq!(y_plus.capacity(), 1);
         assert_eq!(y_plus.num_inputs(), 1);
         assert_eq!(y_plus.num_outputs(), 1);
         assert_eq!(y_plus.num_vertices(), 3);

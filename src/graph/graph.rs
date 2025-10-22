@@ -1,4 +1,4 @@
-use crate::graph::{EdgeType, Vertex, VertexBuilder};
+use crate::graph::{EdgeType, Vertex, VertexBuilder, VertexType};
 use petgraph::prelude::{EdgeIndex, NodeIndex, StableUnGraph};
 use petgraph::stable_graph::{EdgeReferences, NodeReferences};
 use petgraph::visit::{IntoEdgeReferences, IntoNodeReferences};
@@ -8,7 +8,6 @@ pub struct Graph {
     base_graph: StableUnGraph<Vertex, EdgeType>,
     inputs: Vec<Option<NodeIndex>>,
     outputs: Vec<Option<NodeIndex>>,
-    capacity: usize,
 }
 
 impl Graph {
@@ -16,18 +15,19 @@ impl Graph {
     pub fn new(capacity: usize) -> Self {
         Graph {
             base_graph: StableUnGraph::with_capacity(2 * capacity, capacity),
-            inputs: Vec::with_capacity(capacity),
-            outputs: Vec::with_capacity(capacity),
-            capacity,
+            inputs: vec![None; capacity],
+            outputs: vec![None; capacity],
         }
     }
 
-    /// Resizes input, output and capacity exactly enough to hold qubit
+    /// Resizes input and output capacity to match target capacity
     pub fn ensure_capacity(&mut self, target_capacity: usize) {
-        if self.num_inputs() < target_capacity {
+        if self.input_capacity() < target_capacity {
             self.inputs.resize(target_capacity, None);
+        }
+
+        if self.output_capacity() < target_capacity {
             self.outputs.resize(target_capacity, None);
-            self.capacity = target_capacity;
         }
     }
 
@@ -61,10 +61,11 @@ impl Graph {
     pub fn add_wire(&mut self, qubit: usize) {
         self.ensure_capacity(qubit + 1);
         match (self.input(qubit), self.output(qubit)) {
-            (Some(input), Some(output)) =>
+            (Some(input), Some(output)) => {
                 if !self.base_graph.contains_edge(input, output) {
                     self.add_edge(input, output)
                 }
+            }
             (None, None) => {
                 let input = self.add_input(qubit);
                 let output = self.add_output(qubit);
@@ -92,14 +93,29 @@ impl Graph {
             qubits.into_iter().filter(|i| !excluded.contains(i))
         );
     }
-    
+
+    /// Returns true if self is a valid subgraph
+    pub fn is_valid_subgraph(&self) -> bool {
+        self.is_occupied() && self.vertices_all_positioned()
+    }
+
+    /// Returns true if all vertices in graph have positions
+    fn vertices_all_positioned(&self) -> bool {
+        self.vertices().all(|v| v.y_pos().is_some() && v.x_pos().is_some())
+    }
+
+    /// Returns true if not all vertices in graph are boundaries
+    fn is_occupied(&self) -> bool {
+        self.vertices().filter(|v| v.vertex_type() != VertexType::B).count() > 0
+    }
+
     /// Returns vertex by NodeIndex
-    pub fn get_vertex(&self, index: NodeIndex) -> Option<&Vertex> {
+    pub fn vertex(&self, index: NodeIndex) -> Option<&Vertex> {
         self.base_graph.node_weight(index)
     }
 
     /// Returns optional Vertex by NodeIndex
-    pub fn get_edge_index(&self, source: NodeIndex, target: NodeIndex) -> Option<EdgeIndex> {
+    pub fn edge_index(&self, source: NodeIndex, target: NodeIndex) -> Option<EdgeIndex> {
         self.base_graph.find_edge(source, target)
     }
 
@@ -143,19 +159,24 @@ impl Graph {
         &self.outputs
     }
 
-    /// Returns graph capacity
-    pub fn capacity(&self) -> usize {
-        self.capacity
-    }
-
-    /// Returns number of inputs
-    pub fn num_inputs(&self) -> usize {
+    /// Returns input capacity (distinct from rust vector capacity)
+    pub fn input_capacity(&self) -> usize {
         self.inputs.len()
     }
 
-    /// Returns number of outputs
-    pub fn num_outputs(&self) -> usize {
+    /// Returns input capacity (distinct from rust vector capacity)
+    pub fn output_capacity(&self) -> usize {
         self.outputs.len()
+    }
+
+    /// Returns number of inputs present
+    pub fn num_inputs(&self) -> usize {
+        self.inputs().iter().flatten().count()
+    }
+
+    /// Returns number of outputs present
+    pub fn num_outputs(&self) -> usize {
+        self.outputs().iter().flatten().count()
     }
 
     /// Adds new vertex
@@ -206,13 +227,13 @@ impl Graph {
 
     /// Returns NodeIndex if input exists at qubit
     pub fn input(&mut self, qubit: usize) -> Option<NodeIndex> {
-        assert!(qubit < self.num_inputs(), "qubit index larger than input size");
+        assert!(qubit < self.input_capacity(), "qubit index larger than input capacity");
         self.inputs[qubit]
     }
 
     /// Returns NodeIndex if output exists at qubit
     pub fn output(&mut self, qubit: usize) -> Option<NodeIndex> {
-        assert!(qubit < self.num_outputs(), "qubit index larger than output size");
+        assert!(qubit < self.output_capacity(), "qubit index larger than output capacity");
         self.outputs[qubit]
     }
 }
@@ -220,6 +241,21 @@ impl Graph {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn can_create_empty_graph() {
+        let graph = Graph::new(3);
+        assert_eq!(graph.num_edges(), 0);
+        assert_eq!(graph.num_vertices(), 0);
+
+        // Check inputs and outputs
+        assert_eq!(graph.num_inputs(), 0);
+        assert_eq!(graph.num_outputs(), 0);
+
+        // Check capacity
+        assert_eq!(graph.input_capacity(), 3);
+        assert_eq!(graph.output_capacity(), 3);
+    }
 
     #[test]
     fn can_create_base_graph_with_capacity() {
@@ -270,5 +306,44 @@ mod tests {
         assert_eq!(graph.num_edges(), 2);
         assert_eq!(graph.num_inputs(), 1);
         assert_eq!(graph.num_outputs(), 1);
+    }
+
+    #[test]
+    fn invalid_subgraph_when_empty() {
+        let mut graph = Graph::new(2);
+        graph.add_wires(0..2);
+
+        assert!(!graph.is_valid_subgraph());
+    }
+
+    #[test]
+    fn valid_subgraph_is_true() {
+        let mut graph = Graph::new(2);
+
+        let v1 = graph.add_vertex(VertexBuilder::z().qubit(0)
+            .x_pos(1.0)
+            .y_pos(1.0)
+            .build()
+        );
+
+        let v2 = graph.add_vertex(VertexBuilder::x().qubit(1)
+            .x_pos(1.0)
+            .y_pos(2.0)
+            .build()
+        );
+
+        graph.add_edge(v1, v2);
+
+        assert!(graph.is_valid_subgraph());
+    }
+
+    #[test]
+    fn invalid_subgraph_when_vertex_positions_are_none() {
+        let mut graph = Graph::new(2);
+        let v1 = graph.add_vertex(VertexBuilder::z().qubit(0).build());
+        let v2 = graph.add_vertex(VertexBuilder::x().qubit(1).build());
+        graph.add_edge(v1, v2);
+
+        assert!(!graph.is_valid_subgraph());
     }
 }

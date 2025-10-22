@@ -1,6 +1,6 @@
 use fraction::Fraction;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Phase {
     angle: Fraction,
 }

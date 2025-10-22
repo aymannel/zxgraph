@@ -5,7 +5,7 @@ use crate::graph::phase::Phase;
 pub enum VertexType { B, Z, X, Y, H }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vertex {
     vertex_type: VertexType,
     phase: Phase,
@@ -16,13 +16,13 @@ pub struct Vertex {
 
 impl Vertex {
     /// Getter: Returns vertex_type
-    pub fn vertex_type(&self) -> &VertexType {
-        &self.vertex_type
+    pub fn vertex_type(&self) -> VertexType {
+        self.vertex_type
     }
 
     /// Getter: Returns vertex_type
-    pub fn phase(&self) -> &Phase {
-        &self.phase
+    pub fn phase(&self) -> Phase {
+        self.phase
     }
 
     /// Getter: Returns qubit

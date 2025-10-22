@@ -56,7 +56,6 @@ mod tests {
     #[test]
     fn pauli_z() {
         let pauli_z = GraphBuilder::pauli_z(0);
-        assert_eq!(pauli_z.capacity(), 1);
         assert_eq!(pauli_z.num_inputs(), 1);
         assert_eq!(pauli_z.num_outputs(), 1);
         assert_eq!(pauli_z.num_vertices(), 3);
@@ -66,7 +65,6 @@ mod tests {
     #[test]
     fn pauli_x() {
         let pauli_x = GraphBuilder::pauli_x(0);
-        assert_eq!(pauli_x.capacity(), 1);
         assert_eq!(pauli_x.num_inputs(), 1);
         assert_eq!(pauli_x.num_outputs(), 1);
         assert_eq!(pauli_x.num_vertices(), 3);
@@ -76,7 +74,6 @@ mod tests {
     #[test]
     fn pauli_y() {
         let pauli_y = GraphBuilder::pauli_y(0);
-        assert_eq!(pauli_y.capacity(), 1);
         assert_eq!(pauli_y.num_inputs(), 1);
         assert_eq!(pauli_y.num_outputs(), 1);
         assert_eq!(pauli_y.num_vertices(), 3);
