@@ -96,17 +96,9 @@ impl Graph {
 
     /// Returns true if self is a valid subgraph
     pub fn is_valid_subgraph(&self) -> bool {
-        self.is_occupied() && self.vertices_all_positioned()
-    }
-
-    /// Returns true if all vertices in graph have positions
-    fn vertices_all_positioned(&self) -> bool {
-        self.vertices().all(|v| v.y_pos().is_some() && v.x_pos().is_some())
-    }
-
-    /// Returns true if not all vertices in graph are boundaries
-    fn is_occupied(&self) -> bool {
-        self.vertices().filter(|v| v.vertex_type() != VertexType::B).count() > 0
+        let has_positions = self.vertices().all(|v| v.y_pos().is_some() && v.x_pos().is_some());
+        let is_occupied = self.vertices().filter(|v| v.vertex_type() != VertexType::B).count() > 0;
+        is_occupied && has_positions
     }
 
     /// Returns vertex by NodeIndex
@@ -150,12 +142,12 @@ impl Graph {
     }
 
     /// Returns indices of inputs
-    pub fn inputs(&self) -> &[Option<NodeIndex>] {
+    pub fn inputs(&self) -> &Vec<Option<NodeIndex>> {
         &self.inputs
     }
 
     /// Returns indices of outputs
-    pub fn outputs(&self) -> &[Option<NodeIndex>] {
+    pub fn outputs(&self) -> &Vec<Option<NodeIndex>> {
         &self.outputs
     }
 

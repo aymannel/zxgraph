@@ -1,13 +1,12 @@
 use crate::export::Exportable;
-use crate::graph::{Graph, EdgeType, VertexType};
+use crate::graph::{EdgeType, Graph, VertexType};
 use petgraph::prelude::EdgeRef;
 use std::error::Error;
 use std::fmt::Write;
 use std::fs;
-use std::process::Command;
 
 impl Exportable for Graph {
-    fn to_tex(&self, name: &str) -> Result<(), Box<dyn Error>> {
+    fn to_tex(&self, name: &str) -> Result<String, Box<dyn Error>> {
         // Add vertices
         let mut vertices = String::new();
         for (node_index, vertex) in self.enumerate_vertices() {
@@ -44,49 +43,41 @@ impl Exportable for Graph {
             writeln!(&mut edges, "\t\t\t\\draw [style={style}] ({source}) to ({target});")?;
         }
 
-        // Generate tex
-        assert!(name.ends_with(".tex"));
-        let output_path = format!("output/{name}");
+        // Return latex
         let template = fs::read_to_string("src/export/template.tex")?;
-        fs::write(&output_path, template
-            .replace("{vertices}", &vertices)
-            .replace("{edges}", &edges))?;
-        Ok(())
-    }
-
-    // todo - make OS agnostic + check pdflatex is installed // or remove entirely?
-    fn to_pdf(&self, name: &str) -> Result<(), Box<dyn Error>> {
-        let source_path = format!("output/{name}");
-        Command::new("pdflatex").args(&[
-            "-interaction=nonstopmode",
-            "-halt-on-error",
-            "-output-directory", "output",
-            &source_path
-        ]).status()?;
-        Ok(())
-    }
-
-    fn to_json(&self, name: &str) -> Result<(), Box<dyn Error>> {
-        todo!()
+        let tex_output = template.replace("{vertices}", &vertices).replace("{edges}", &edges);
+        Ok(tex_output)
     }
 }
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::builders::{Clifford, Gadget, GraphBuilder, Pauli};
     use crate::graph::phase::Phase;
+    use std::process::Command;
 
     #[macro_export]
     macro_rules! export_and_open {
         ($graph:expr, $file_name:expr) => {
             {
-                use std::process::Command;
-                let file_name = $file_name;
                 let graph = $graph;
+                let file_name = $file_name;
+                let output = graph.to_tex(file_name).expect("Could not generate tex file");
 
-                graph.to_tex(file_name).expect("Could not generate tex file");
-                graph.to_pdf(file_name).expect("Could not generate pdf");
+                assert!(file_name.ends_with(".tex"));
+                let path = format!("output/{file_name}");
+
+                std::fs::write(&path, output).expect("Failed to write tex file");
+
+                std::process::Command::new("pdflatex").args(&[
+                    "-interaction=nonstopmode",
+                    "-halt-on-error",
+                    "-output-directory", "output",
+                    &path
+                ]).status()
+                .expect("Failed to execute pdflatex");
 
                 Command::new("open")
                     .current_dir("output")
