@@ -26,7 +26,7 @@ impl Gadget for GraphBuilder {
                 'z' => Some(VertexBuilder::z()),
                 'x' => Some(VertexBuilder::x()),
                 'y' => Some(VertexBuilder::y()),
-                'i' => {None},
+                'i' => None,
                 _ => panic!("invalid pauli character")
             };
 
