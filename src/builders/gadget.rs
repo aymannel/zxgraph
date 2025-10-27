@@ -1,22 +1,17 @@
 use crate::builders::{Gadget, GraphBuilder};
 use crate::graph::phase::Phase;
 use crate::graph::{Graph, VertexBuilder};
-use std::cmp::max;
 
 impl Gadget for GraphBuilder {
     /// Builder: Generates a BaseGraph instance of some Pauli Gadget or Phase Gadget
     fn gadget(pauli_string: &str, phase: Phase) -> Graph {
-        let mut graph = Graph::new(pauli_string.len());
-
-        let hub_pos = max(
-            graph.input_capacity(),
-            graph.output_capacity()
-        ) as f64;
+        let pauli_len = pauli_string.len();
+        let mut graph = Graph::new(pauli_len);
 
         let hub = graph.add_vertex(VertexBuilder::z()
             .phase(phase)
             .qubit(0)
-            .y_pos(hub_pos)
+            .y_pos(pauli_len as f64)
             .x_pos(0.8)
             .build()
         );
