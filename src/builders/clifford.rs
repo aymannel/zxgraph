@@ -9,15 +9,13 @@ impl Clifford for GraphBuilder {
         let capacity = max(control, target) + 1;
         let mut graph = Graph::new(capacity);
 
-        let z = graph.add_vertex_on_wire(VertexBuilder::z()
-            .qubit(control)
-            .qubit_coords()
+        let z = graph.add_vertex_on_wire(control, VertexBuilder::z()
+            .coords((0.0, control as f64))
             .build()
         );
 
-        let x = graph.add_vertex_on_wire(VertexBuilder::x()
-            .qubit(target)
-            .qubit_coords()
+        let x = graph.add_vertex_on_wire(target, VertexBuilder::x()
+            .coords((0.0, target as f64))
             .build()
         );
 
@@ -32,15 +30,13 @@ impl Clifford for GraphBuilder {
         let capacity = max(control, target) + 1;
         let mut graph = Graph::new(capacity);
 
-        let z1 = graph.add_vertex_on_wire(VertexBuilder::z()
-            .qubit(control)
-            .qubit_coords()
+        let z1 = graph.add_vertex_on_wire(control, VertexBuilder::z()
+            .coords((0.0, control as f64))
             .build()
         );
 
-        let z2 = graph.add_vertex_on_wire(VertexBuilder::z()
-            .qubit(target)
-            .qubit_coords()
+        let z2 = graph.add_vertex_on_wire(target, VertexBuilder::z()
+            .coords((0.0, target as f64))
             .build()
         );
 
@@ -55,9 +51,8 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::z_plus()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::z_plus()
+            .coords((0.0, qubit as f64))
             .build()
         );
 
@@ -70,9 +65,8 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::z_minus()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::z_minus()
+            .coords((0.0, qubit as f64))
             .build()
         );
 
@@ -85,9 +79,8 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::x_plus()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::x_plus()
+            .coords((0.0, qubit as f64))
             .build()
         );
 
@@ -100,9 +93,8 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::x_minus()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::x_minus()
+            .coords((0.0, qubit as f64))
             .build()
         );
 
@@ -115,9 +107,8 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::y_plus()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::y_plus()
+            .coords((0.0, qubit as f64))
             .build()
         );
 
@@ -130,9 +121,8 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::y_minus()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::y_minus()
+            .coords((0.0, qubit as f64))
             .build()
         );
 

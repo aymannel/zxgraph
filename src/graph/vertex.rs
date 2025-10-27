@@ -9,7 +9,6 @@ pub enum VertexType { B, Z, X, Y, H }
 pub struct Vertex {
     vertex_type: VertexType,
     phase: Phase,
-    qubit: usize,
     x_pos: Option<f64>,
     y_pos: Option<f64>,
 }
@@ -23,11 +22,6 @@ impl Vertex {
     /// Getter: Returns vertex_type
     pub fn phase(&self) -> Phase {
         self.phase
-    }
-
-    /// Getter: Returns qubit
-    pub fn qubit(&self) -> usize {
-        self.qubit
     }
 
     /// Getter: Returns x coordinate
@@ -46,7 +40,6 @@ impl Vertex {
 pub struct VertexBuilder {
     vertex_type: Option<VertexType>,
     phase: Option<Phase>,
-    qubit: Option<usize>,
     x_pos: Option<f64>,
     y_pos: Option<f64>,
 }
@@ -56,7 +49,6 @@ impl VertexBuilder {
         Self {
             vertex_type: None,
             phase: None,
-            qubit: None,
             x_pos: None,
             y_pos: None,
         }
@@ -67,7 +59,6 @@ impl VertexBuilder {
         Vertex {
             vertex_type: self.vertex_type.expect("vertex_type not set"),
             phase: self.phase.unwrap_or(Phase::zero()),
-            qubit: self.qubit.expect("qubit not set"),
             x_pos: self.x_pos,
             y_pos: self.y_pos,
         }
@@ -85,12 +76,6 @@ impl VertexBuilder {
         self
     }
 
-    /// Builder: set qubit
-    pub fn qubit(mut self, qubit: usize) -> Self {
-        self.qubit = Some(qubit);
-        self
-    }
-
     /// Builder: set x_pos
     pub fn x_pos(mut self, x: f64) -> Self {
         self.x_pos = Some(x);
@@ -104,10 +89,9 @@ impl VertexBuilder {
     }
 
     /// Builder: set default coordinates
-    pub fn qubit_coords(mut self) -> Self {
-        let qubit = self.qubit.expect("qubit must be set before calling default_coords");
-        self.y_pos = Some(qubit as f64);
-        self.x_pos = Some(0.0);
+    pub fn coords(mut self, coords: (f64, f64)) -> Self {
+        self.x_pos = Some(coords.0);
+        self.y_pos = Some(coords.1);
         self
     }
 

@@ -9,10 +9,8 @@ impl Gadget for GraphBuilder {
         let mut graph = Graph::new(pauli_len);
 
         let hub = graph.add_vertex(VertexBuilder::z()
+            .coords((0.8, pauli_len as f64))
             .phase(phase)
-            .qubit(0)
-            .y_pos(pauli_len as f64)
-            .x_pos(0.8)
             .build()
         );
 
@@ -26,9 +24,8 @@ impl Gadget for GraphBuilder {
             };
 
             if let Some(builder) = opt_builder {
-                let vertex = graph.add_vertex_on_wire(builder
-                    .qubit(qubit)
-                    .qubit_coords()
+                let vertex = graph.add_vertex_on_wire(qubit, builder
+                    .coords((0.0, qubit as f64))
                     .build()
                 );
                 graph.add_edge(vertex, hub);
@@ -47,7 +44,7 @@ mod tests {
     use crate::graph::phase::Phase;
 
     #[test]
-    #[should_panic("invalid pauli character")]
+    #[should_panic(expected = "invalid pauli character")]
     fn should_panic_when_invalid_pauli_character() {
         GraphBuilder::gadget("ZXH", Phase::zero());
     }

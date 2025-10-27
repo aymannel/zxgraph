@@ -8,9 +8,8 @@ impl Pauli for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::z_pauli()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::z_pauli()
+            .coords((0.0, qubit as f64))
             .build()
         );
 
@@ -23,9 +22,8 @@ impl Pauli for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::x_pauli()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::x_pauli()
+            .coords((0.0, qubit as f64))
             .build()
         );
 
@@ -38,9 +36,8 @@ impl Pauli for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(VertexBuilder::y_pauli()
-            .qubit(qubit)
-            .qubit_coords()
+        graph.add_vertex_on_wire(qubit, VertexBuilder::y_pauli()
+            .coords((0.0, qubit as f64))
             .build()
         );
 

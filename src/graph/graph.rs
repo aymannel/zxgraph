@@ -27,9 +27,7 @@ impl Graph {
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
         assert!(self.input(qubit).is_none(), "Input at qubit {qubit} already exists");
         let input = self.base_graph.add_node(VertexBuilder::b()
-            .qubit(qubit)
-            .qubit_coords()
-            .x_pos(-1.0)
+            .coords((-1.0, qubit as f64))
             .build()
         );
         self.inputs.insert(qubit, input);
@@ -42,9 +40,7 @@ impl Graph {
     pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
         assert!(self.output(qubit).is_none(), "Output at qubit {qubit} already exists");
         let output = self.base_graph.add_node(VertexBuilder::b()
-            .qubit(qubit)
-            .qubit_coords()
-            .x_pos(1.0)
+            .coords((1.0, qubit as f64))
             .build()
         );
         self.outputs.insert(qubit, output);
@@ -92,9 +88,9 @@ impl Graph {
     }
 
     /// Adds new vertex and wire along the specified qubit
-    pub fn add_vertex_on_wire(&mut self, vertex: Vertex) -> NodeIndex {
-        let input = self.add_input(vertex.qubit());
-        let output = self.add_output(vertex.qubit());
+    pub fn add_vertex_on_wire(&mut self, qubit: usize, vertex: Vertex) -> NodeIndex {
+        let input = self.add_input(qubit);
+        let output = self.add_output(qubit);
         let vertex = self.add_vertex(vertex);
         self.add_edge(input, vertex);
         self.add_edge(output, vertex);
@@ -226,8 +222,7 @@ mod tests {
         assert_eq!(graph.num_outputs(), 1);
 
         graph.add_vertex(VertexBuilder::z()
-            .qubit(0)
-            .x_pos(1.0)
+            .coords((1.0, 0.0))
             .y_pos(0.0)
             .build()
         );
@@ -306,15 +301,13 @@ mod tests {
     fn valid_subgraph_is_true() {
         let mut graph = Graph::new(2);
 
-        let v1 = graph.add_vertex(VertexBuilder::z().qubit(0)
-            .x_pos(1.0)
-            .y_pos(1.0)
+        let v1 = graph.add_vertex(VertexBuilder::z()
+            .coords((1.0, 1.0))
             .build()
         );
 
-        let v2 = graph.add_vertex(VertexBuilder::x().qubit(1)
-            .x_pos(1.0)
-            .y_pos(2.0)
+        let v2 = graph.add_vertex(VertexBuilder::x()
+            .coords((1.0, 2.0))
             .build()
         );
 
@@ -326,8 +319,8 @@ mod tests {
     #[test]
     fn invalid_subgraph_when_vertex_positions_are_none() {
         let mut graph = Graph::new(2);
-        let v1 = graph.add_vertex(VertexBuilder::z().qubit(0).build());
-        let v2 = graph.add_vertex(VertexBuilder::x().qubit(1).build());
+        let v1 = graph.add_vertex(VertexBuilder::z().build());
+        let v2 = graph.add_vertex(VertexBuilder::x().build());
         graph.add_edge(v1, v2);
         assert!(!graph.is_composable());
     }
