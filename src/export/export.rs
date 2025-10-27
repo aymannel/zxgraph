@@ -10,23 +10,27 @@ impl Exportable for Graph {
         // Add vertices
         let mut vertices = String::new();
         for (node_index, vertex) in self.enumerate_vertices() {
-            let style: &str = match (vertex.vertex_type(), vertex.phase().is_zero()) {
-                (VertexType::B, _) => "boundary",
-                (VertexType::H, _) => "hadamard",
-                (VertexType::Z, true) => "z_node",
-                (VertexType::X, true) => "x_node",
-                (VertexType::Y, true) => "y_node",
-                (VertexType::Z, false) => "z_phase",
-                (VertexType::X, false) => "x_phase",
-                (VertexType::Y, false) => "y_phase",
-            };
+            if let Some(coords) = vertex.coords() {
+                let style: &str = match (vertex.vertex_type(), vertex.phase().is_zero()) {
+                    (VertexType::B, _) => "boundary",
+                    (VertexType::H, _) => "hadamard",
+                    (VertexType::Z, true) => "z_node",
+                    (VertexType::X, true) => "x_node",
+                    (VertexType::Y, true) => "y_node",
+                    (VertexType::Z, false) => "z_phase",
+                    (VertexType::X, false) => "x_phase",
+                    (VertexType::Y, false) => "y_phase",
+                };
 
-            // Format export node
-            let x = vertex.x_pos().unwrap();
-            let y = -vertex.y_pos().unwrap();
-            let index = node_index.index();
-            let phase = vertex.phase().to_latex();
-            writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};")?;
+                // Format export node
+                let x = coords.x;
+                let y = -coords.y;
+                let index = node_index.index();
+                let phase = vertex.phase().to_latex();
+                writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};")?;
+            } else {
+                return Err(format!("Vertex {} has no coordinates", node_index.index()).into());
+            }
         }
 
         // Add edges
@@ -117,4 +121,7 @@ mod tests {
         let graph = GraphBuilder::cz(1, 2);
         export_and_open!(graph, "cz.tex");
     }
+
+    #[test]
+    fn panics_if_missing_coords() {}
 }

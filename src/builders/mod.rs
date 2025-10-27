@@ -6,6 +6,7 @@ use crate::graph::phase::Phase;
 use crate::graph::Graph;
 
 
+// todo - should have build() method which perform checks
 pub struct GraphBuilder;
 
 pub trait Gadget {

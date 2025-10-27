@@ -9,7 +9,7 @@ impl Gadget for GraphBuilder {
         let mut graph = Graph::new(pauli_len);
 
         let hub = graph.add_vertex(VertexBuilder::z()
-            .coords((0.8, pauli_len as f64))
+            .coords(0.8, pauli_len as f64)
             .phase(phase)
             .build()
         );
@@ -25,12 +25,12 @@ impl Gadget for GraphBuilder {
 
             if let Some(builder) = opt_builder {
                 let vertex = graph.add_vertex_on_wire(qubit, builder
-                    .coords((0.0, qubit as f64))
+                    .coords(0.0, qubit as f64)
                     .build()
                 );
                 graph.add_edge(vertex, hub);
             } else {
-                graph.add_wire(qubit);
+                graph.add_wire(qubit)
             }
         }
         graph

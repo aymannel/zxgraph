@@ -11,6 +11,7 @@ pub struct Graph {
     outputs: BTreeMap<usize, NodeIndex>,
 }
 
+// todo - review methods, which need to be public and which can be made private?
 impl Graph {
     /// Creates an empty graph
     pub fn new(capacity: usize) -> Self {
@@ -21,51 +22,45 @@ impl Graph {
         }
     }
 
-    // todo - should take NodeIndex of vertex you want to connect to input and the qubit it's on
-    // todo - then add a wire to it
+    // todo - should take NodeIndex of vertex you want to connect to input and the qubit it's then add a wire to it
+    // todo - don't specify coords here! only in the builder. use qubit index to determine coords there
     /// Adds new input boundary node
     pub fn add_input(&mut self, qubit: usize) -> NodeIndex {
         assert!(self.input(qubit).is_none(), "Input at qubit {qubit} already exists");
+        debug_assert_eq!(self.num_boundaries(), self.inputs.len() + self.outputs.len());
         let input = self.base_graph.add_node(VertexBuilder::b()
-            .coords((-1.0, qubit as f64))
+            .coords(-1.0, qubit as f64)
             .build()
         );
         self.inputs.insert(qubit, input);
         input
     }
 
-    // todo - should take NodeIndex of vertex you want to connect to output and the qubit it's on
-    // todo - then add a wire to it
+    // todo - should take NodeIndex of vertex you want to connect to output and the qubit it's then add a wire to it
+    // todo - don't specify coords here! only in the builder. use qubit index to determine coords there
     /// Adds new output boundary
     pub fn add_output(&mut self, qubit: usize) -> NodeIndex {
         assert!(self.output(qubit).is_none(), "Output at qubit {qubit} already exists");
+        debug_assert_eq!(self.num_boundaries(), self.inputs.len() + self.outputs.len());
         let output = self.base_graph.add_node(VertexBuilder::b()
-            .coords((1.0, qubit as f64))
+            .coords(1.0, qubit as f64)
             .build()
         );
         self.outputs.insert(qubit, output);
         output
     }
 
-    /// Adds a single wire along the specified qubit
+    /// Adds a single wire along the specified qubit. Where a wire is defined as a qubit with no gate (identity).
     pub fn add_wire(&mut self, qubit: usize) {
-        match (self.input(qubit), self.output(qubit)) {
-            (Some(input), Some(output)) => {
-                if !self.base_graph.contains_edge(input, output) {
-                    self.add_edge(input, output)
-                }
-            }
-            (None, None) => {
-                let input = self.add_input(qubit);
-                let output = self.add_output(qubit);
-                self.add_edge(input, output)
-            }
-            _ => panic!("input and output mismatch at qubit index {qubit}"),
-        }
+        assert!(self.inputs.get(&qubit).is_none(), "Input at qubit {qubit} already exists");
+        assert!(self.outputs.get(&qubit).is_none(), "Output at qubit {qubit} already exists");
+        let input = self.add_input(qubit);
+        let output = self.add_output(qubit);
+        self.add_edge(input, output);
     }
 
     /// Adds wires along the specified qubits
-    pub fn add_wires(&mut self, qubits: impl IntoIterator<Item = usize>) {
+    pub fn add_wires(&mut self, qubits: impl IntoIterator<Item=usize>) {
         for qubit in qubits {
             self.add_wire(qubit);
         }
@@ -74,8 +69,8 @@ impl Graph {
     /// Adds wires along the specified qubits excluding specified qubits
     pub fn add_wires_excluding<I, E>(&mut self, qubits: I, excluded: E)
     where
-        I: IntoIterator<Item = usize>,
-        E: IntoIterator<Item = usize>,
+        I: IntoIterator<Item=usize>,
+        E: IntoIterator<Item=usize>,
     {
         let excluded: Vec<_> = excluded.into_iter().collect();
         let filtered_qubits = qubits.into_iter().filter(|i| !excluded.contains(i));
@@ -87,6 +82,7 @@ impl Graph {
         self.base_graph.add_node(vertex)
     }
 
+    // todo - should be a builder method
     /// Adds new vertex and wire along the specified qubit
     pub fn add_vertex_on_wire(&mut self, qubit: usize, vertex: Vertex) -> NodeIndex {
         let input = self.add_input(qubit);
@@ -130,9 +126,16 @@ impl Graph {
         self.base_graph.find_edge(source, target)
     }
 
-    /// Returns all vertices in graph
+    // todo - exclude inputs/outputs
+    /// Returns all vertices in graph, excluding inputs and outputs
     pub fn vertices(&self) -> impl Iterator<Item=&Vertex> {
         self.base_graph.node_weights()
+    }
+
+    // todo - exclude inputs/outputs
+    /// Returns all vertices in graph, excluding inputs and outputs
+    pub fn vertices_mut(&mut self) -> impl Iterator<Item=&mut Vertex> {
+        self.base_graph.node_weights_mut().filter(|v| v.vertex_type() != VertexType::B)
     }
 
     /// Returns all edges in graph
@@ -140,9 +143,9 @@ impl Graph {
         self.base_graph.edge_weights()
     }
 
-    /// Returns total number of vertices
+    /// Returns total number of vertices, excluding boundaries
     pub fn num_vertices(&self) -> usize {
-        self.base_graph.node_count()
+        self.base_graph.node_count() - self.num_boundaries()
     }
 
     /// Returns total number of edges
@@ -150,12 +153,12 @@ impl Graph {
         self.base_graph.edge_count()
     }
 
-    /// Returns all enumerated vertices in graph
+    /// Returns all enumerated vertices in graph, including inputs and outputs
     pub fn enumerate_vertices(&self) -> NodeReferences<'_, Vertex> {
         self.base_graph.node_references()
     }
 
-    /// Returns all enumerated edges in graph
+    /// Returns all enumerated edges in graph, including input and output edges
     pub fn enumerate_edges(&self) -> EdgeReferences<'_, EdgeType> {
         self.base_graph.edge_references()
     }
@@ -191,10 +194,13 @@ impl Graph {
     }
 
     /// Returns true if self can be composed
-    pub fn is_composable(&self) -> bool {
-        let has_positions = self.vertices().all(|v| v.y_pos().is_some() && v.x_pos().is_some());
-        let is_occupied = self.vertices().filter(|v| v.vertex_type() != VertexType::B).count() > 0;
-        is_occupied && has_positions
+    fn is_composable(&self) -> bool {
+        self.num_vertices() > 0 && self.vertices().all(|v| v.coords().is_some())
+    }
+
+    /// Returns number of vertices of type VertexType::B
+    fn num_boundaries(&self) -> usize {
+        self.base_graph.node_weights().filter(|v| v.vertex_type() == VertexType::B).count()
     }
 }
 
@@ -222,8 +228,7 @@ mod tests {
         assert_eq!(graph.num_outputs(), 1);
 
         graph.add_vertex(VertexBuilder::z()
-            .coords((1.0, 0.0))
-            .y_pos(0.0)
+            .coords(1.0, 0.0)
             .build()
         );
 
@@ -302,12 +307,12 @@ mod tests {
         let mut graph = Graph::new(2);
 
         let v1 = graph.add_vertex(VertexBuilder::z()
-            .coords((1.0, 1.0))
+            .coords(1.0, 1.0)
             .build()
         );
 
         let v2 = graph.add_vertex(VertexBuilder::x()
-            .coords((1.0, 2.0))
+            .coords(1.0, 2.0)
             .build()
         );
 
@@ -324,4 +329,7 @@ mod tests {
         graph.add_edge(v1, v2);
         assert!(!graph.is_composable());
     }
+
+    #[test]
+    fn num_vertices_of_type_boundary_equal_to_num_inputs_and_outputs() {}
 }

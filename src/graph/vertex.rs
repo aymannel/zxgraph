@@ -5,43 +5,56 @@ use crate::graph::phase::Phase;
 pub enum VertexType { B, Z, X, Y, H }
 
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Point { pub x: f64, pub y: f64 }
+
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vertex {
     vertex_type: VertexType,
     phase: Phase,
-    x_pos: Option<f64>,
-    y_pos: Option<f64>,
+    coords: Option<Point>,
 }
 
 impl Vertex {
-    /// Getter: Returns vertex_type
+    /// Returns vertex_type
     pub fn vertex_type(&self) -> VertexType {
         self.vertex_type
     }
 
-    /// Getter: Returns vertex_type
+    /// Returns vertex_type
     pub fn phase(&self) -> Phase {
         self.phase
     }
 
-    /// Getter: Returns x coordinate
-    pub fn x_pos(&self) -> Option<f64> {
-        self.x_pos
+    /// Returns x coordinate
+    pub fn coords(&self) -> Option<Point> {
+        self.coords
     }
 
-    /// Getter: Returns x coordinate
-    pub fn y_pos(&self) -> Option<f64> {
-        self.y_pos
+    /// Set vertex_type
+    pub fn set_vertex_type(&mut self, vertex_type: VertexType) {
+        self.vertex_type = vertex_type;
+    }
+
+    /// Set phase
+    pub fn set_phase(&mut self, phase: Phase) {
+        self.phase = phase;
+    }
+
+    /// Set coordinates
+    pub fn set_coords(&mut self, x: f64, y: f64) {
+        self.coords = Some(Point {x, y});
     }
 }
 
 
+// todo - use the typestate builder pattern here
 #[derive(Debug, Clone)]
 pub struct VertexBuilder {
     vertex_type: Option<VertexType>,
     phase: Option<Phase>,
-    x_pos: Option<f64>,
-    y_pos: Option<f64>,
+    coords: Option<Point>,
 }
 
 impl VertexBuilder {
@@ -49,8 +62,7 @@ impl VertexBuilder {
         Self {
             vertex_type: None,
             phase: None,
-            x_pos: None,
-            y_pos: None,
+            coords: None,
         }
     }
 
@@ -59,8 +71,7 @@ impl VertexBuilder {
         Vertex {
             vertex_type: self.vertex_type.expect("vertex_type not set"),
             phase: self.phase.unwrap_or(Phase::zero()),
-            x_pos: self.x_pos,
-            y_pos: self.y_pos,
+            coords: self.coords,
         }
     }
 
@@ -76,22 +87,9 @@ impl VertexBuilder {
         self
     }
 
-    /// Builder: set x_pos
-    pub fn x_pos(mut self, x: f64) -> Self {
-        self.x_pos = Some(x);
-        self
-    }
-
-    /// Builder: set y_pos
-    pub fn y_pos(mut self, y: f64) -> Self {
-        self.y_pos = Some(y);
-        self
-    }
-
-    /// Builder: set default coordinates
-    pub fn coords(mut self, coords: (f64, f64)) -> Self {
-        self.x_pos = Some(coords.0);
-        self.y_pos = Some(coords.1);
+    /// Builder: set coordinates
+    pub fn coords(mut self, x: f64, y: f64) -> Self {
+        self.coords = Some(Point {x, y});
         self
     }
 
