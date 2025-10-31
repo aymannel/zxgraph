@@ -1,21 +1,22 @@
+use petgraph::graph::NodeIndex;
 use crate::graph::phase::Phase;
 
+pub type VertexIndex = NodeIndex;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VertexType { B, Z, X, Y, H }
 
-
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Point { pub x: f64, pub y: f64 }
-
+pub struct Coords { pub x: f64, pub y: f64 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vertex {
     vertex_type: VertexType,
     phase: Phase,
-    coords: Option<Point>,
+    coords: Option<Coords>,
 }
 
+/// Getters and setters
 impl Vertex {
     /// Returns vertex_type
     pub fn vertex_type(&self) -> VertexType {
@@ -28,7 +29,7 @@ impl Vertex {
     }
 
     /// Returns x coordinate
-    pub fn coords(&self) -> Option<Point> {
+    pub fn coords(&self) -> Option<Coords> {
         self.coords
     }
 
@@ -43,8 +44,43 @@ impl Vertex {
     }
 
     /// Set coordinates
-    pub fn set_coords(&mut self, x: f64, y: f64) {
-        self.coords = Some(Point {x, y});
+    pub fn set_coords(&mut self, coords: Coords) {
+        self.coords = Some(coords);
+    }
+}
+
+/// Constructors
+impl Vertex {
+    pub fn b() -> Self {
+        Self {
+            vertex_type: VertexType::B,
+            phase: Phase::zero(),
+            coords: None,
+        }
+    }
+
+    pub fn z() -> Self {
+        Self {
+            vertex_type: VertexType::Z,
+            phase: Phase::zero(),
+            coords: None,
+        }
+    }
+
+    pub fn x() -> Self {
+        Self {
+            vertex_type: VertexType::X,
+            phase: Phase::zero(),
+            coords: None,
+        }
+    }
+
+    pub fn y() -> Self {
+        Self {
+            vertex_type: VertexType::Y,
+            phase: Phase::zero(),
+            coords: None,
+        }
     }
 }
 
@@ -54,7 +90,7 @@ impl Vertex {
 pub struct VertexBuilder {
     vertex_type: Option<VertexType>,
     phase: Option<Phase>,
-    coords: Option<Point>,
+    coords: Option<Coords>,
 }
 
 impl VertexBuilder {
@@ -89,7 +125,7 @@ impl VertexBuilder {
 
     /// Builder: set coordinates
     pub fn coords(mut self, x: f64, y: f64) -> Self {
-        self.coords = Some(Point {x, y});
+        self.coords = Some(Coords {x, y});
         self
     }
 

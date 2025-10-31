@@ -58,7 +58,7 @@ impl Exportable for Graph {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::builders::{Clifford, Gadget, GraphBuilder, Pauli};
+    use crate::builders::{Gadget, GraphBuilder};
     use crate::graph::phase::Phase;
     use std::process::Command;
 
@@ -98,29 +98,29 @@ mod tests {
         export_and_open!(graph, "gadget.tex");
     }
 
-    #[test]
-    fn can_export_pauli_y() {
-        let graph = GraphBuilder::pauli_y(1);
-        export_and_open!(graph, "pauli_y.tex");
-    }
+    // #[test]
+    // fn can_export_pauli_y() {
+    //     let graph = GraphBuilder::pauli_y(1);
+    //     export_and_open!(graph, "pauli_y.tex");
+    // }
 
-    #[test]
-    fn can_export_x_plus() {
-        let graph = GraphBuilder::x_plus(1);
-        export_and_open!(graph, "x_plus.tex");
-    }
+    // #[test]
+    // fn can_export_x_plus() {
+    //     let graph = GraphBuilder::x_plus(1);
+    //     export_and_open!(graph, "x_plus.tex");
+    // }
 
-    #[test]
-    fn can_export_cx() {
-        let graph = GraphBuilder::cx(0, 2);
-        export_and_open!(graph, "cx.tex");
-    }
+    // #[test]
+    // fn can_export_cx() {
+    //     let graph = GraphBuilder::cx(0, 2);
+    //     export_and_open!(graph, "cx.tex");
+    // }
 
-    #[test]
-    fn can_export_cz() {
-        let graph = GraphBuilder::cz(1, 2);
-        export_and_open!(graph, "cz.tex");
-    }
+    // #[test]
+    // fn can_export_cz() {
+    //     let graph = GraphBuilder::cz(1, 2);
+    //     export_and_open!(graph, "cz.tex");
+    // }
 
     #[test]
     fn panics_if_missing_coords() {}

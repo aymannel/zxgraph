@@ -24,13 +24,11 @@ impl Gadget for GraphBuilder {
             };
 
             if let Some(builder) = opt_builder {
-                let vertex = graph.add_vertex_on_wire(qubit, builder
+                let vertex = graph.add_unary(qubit, builder
                     .coords(0.0, qubit as f64)
                     .build()
                 );
                 graph.add_edge(vertex, hub);
-            } else {
-                graph.add_wire(qubit)
             }
         }
         graph
@@ -54,7 +52,7 @@ mod tests {
         let gadget = GraphBuilder::gadget("zxy", Phase::zero());
         assert_eq!(gadget.num_inputs(), 3);
         assert_eq!(gadget.num_outputs(), 3);
-        assert_eq!(gadget.num_vertices(), 10);
+        assert_eq!(gadget.num_vertices(), 4);
         assert_eq!(gadget.num_edges(), 9);
     }
 }

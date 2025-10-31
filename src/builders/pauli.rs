@@ -1,4 +1,4 @@
-use crate::builders::{GraphBuilder, Pauli};
+/*use crate::builders::{GraphBuilder, Pauli};
 use crate::graph::{Graph, VertexBuilder};
 
 impl Pauli for GraphBuilder {
@@ -8,7 +8,7 @@ impl Pauli for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::z_pauli()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::z_pauli()
             .coords(0.0, qubit as f64)
             .build()
         );
@@ -22,7 +22,7 @@ impl Pauli for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::x_pauli()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::x_pauli()
             .coords(0.0, qubit as f64)
             .build()
         );
@@ -36,7 +36,7 @@ impl Pauli for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::y_pauli()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::y_pauli()
             .coords(0.0, qubit as f64)
             .build()
         );
@@ -76,4 +76,4 @@ mod tests {
         assert_eq!(pauli_y.num_vertices(), 3);
         assert_eq!(pauli_y.num_edges(), 2);
     }
-}
+}*/

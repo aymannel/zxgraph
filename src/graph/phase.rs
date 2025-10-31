@@ -7,22 +7,22 @@ pub struct Phase {
 
 impl Phase {
     pub fn zero() -> Self {
-        Phase::from(0.0)
+        Phase::new(0.0)
     }
 
     pub fn one() -> Self {
-        Phase::from(1.0)
+        Phase::new(1.0)
     }
 
     pub fn plus() -> Self {
-        Phase::from(0.5)
+        Phase::new(0.5)
     }
 
     pub fn minus() -> Self {
-        Phase::from(-0.5)
+        Phase::new(-0.5)
     }
 
-    pub fn from(angle: f64) -> Self {
+    pub fn new(angle: f64) -> Self {
         let mut frac = Fraction::from(angle % 2.0);
         if frac < Fraction::from(0) {
             frac += Fraction::from(2)
@@ -60,37 +60,37 @@ mod tests {
 
     #[test]
     fn test_phase_from_zero() {
-        let phase = Phase::from(0.0);
+        let phase = Phase::new(0.0);
         assert_eq!(phase.angle(), Fraction::from(0));
     }
 
     #[test]
     fn test_phase_from_positive_angle_under_two_pi() {
-        let phase = Phase::from(1.25);
+        let phase = Phase::new(1.25);
         assert_eq!(phase.angle(), Fraction::from(1.25 % 2.0));
     }
 
     #[test]
     fn test_phase_wraps_around_two_pi() {
-        let phase = Phase::from(4.5);
+        let phase = Phase::new(4.5);
         assert_eq!(phase.angle(), Fraction::from(0.5));
     }
 
     #[test]
     fn test_phase_from_negative_angle() {
-        let phase = Phase::from(-0.5);
+        let phase = Phase::new(-0.5);
         assert_eq!(phase.angle(), Fraction::from(1.5));
     }
 
     #[test]
     fn test_phase_from_exactly_two_pi_wraps_to_zero() {
-        let phase = Phase::from(2.0);
+        let phase = Phase::new(2.0);
         assert_eq!(phase.angle(), Fraction::from(0));
     }
 
     #[test]
     fn test_phase_from_multiple_of_two_pi_wraps_to_zero() {
-        let phase = Phase::from(6.0);
+        let phase = Phase::new(6.0);
         assert_eq!(phase.angle(), Fraction::from(0));
     }
 
@@ -98,13 +98,13 @@ mod tests {
 
     #[test]
     fn test_is_zero_true_for_zero() {
-        let phase = Phase::from(0.0);
+        let phase = Phase::new(0.0);
         assert!(phase.is_zero());
     }
 
     #[test]
     fn test_is_zero_false_for_nonzero() {
-        let phase = Phase::from(1.0);
+        let phase = Phase::new(1.0);
         assert!(!phase.is_zero());
     }
 

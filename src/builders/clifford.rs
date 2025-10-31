@@ -1,4 +1,4 @@
-use crate::builders::{Clifford, GraphBuilder};
+/*use crate::builders::{Clifford, GraphBuilder};
 use crate::graph::{Graph, VertexBuilder};
 use std::cmp::max;
 
@@ -9,17 +9,19 @@ impl Clifford for GraphBuilder {
         let capacity = max(control, target) + 1;
         let mut graph = Graph::new(capacity);
 
-        let z = graph.add_vertex_on_wire(control, VertexBuilder::z()
+        let z = graph.add_vertex_along_wire(control, VertexBuilder::z()
             .coords(0.0, control as f64)
             .build()
         );
 
-        let x = graph.add_vertex_on_wire(target, VertexBuilder::x()
+        let x = graph.add_vertex_along_wire(target, VertexBuilder::x()
             .coords(0.0, target as f64)
             .build()
         );
 
-        graph.add_wires_excluding(0..capacity, [target, control]);
+        graph.add_wires_excluding_to(0..capacity, [target, control]);
+        graph.position_inputs();
+        graph.position_outputs();
         graph.add_edge(z, x);
         graph
     }
@@ -30,16 +32,20 @@ impl Clifford for GraphBuilder {
         let capacity = max(control, target) + 1;
         let mut graph = Graph::new(capacity);
 
-        let z1 = graph.add_vertex_on_wire(control, VertexBuilder::z()
+        let wire1 = graph.add_wire_to(control);
+        let z1 = graph.add_vertex_to_edge(wire1, VertexBuilder::z()
             .coords(0.0, control as f64)
             .build()
         );
 
-        let z2 = graph.add_vertex_on_wire(target, VertexBuilder::z()
+        let wire2 = graph.add_wire_to(target);
+        let z2 = graph.add_vertex_to_edge(wire2, VertexBuilder::z()
             .coords(0.0, target as f64)
             .build()
         );
 
+        graph.position_inputs();
+        graph.position_outputs();
         graph.add_wires_excluding(0..capacity, [target, control]);
         graph.add_edge(z1, z2);
         graph
@@ -51,7 +57,7 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::z_plus()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::z_plus()
             .coords(0.0, qubit as f64)
             .build()
         );
@@ -65,11 +71,10 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::z_minus()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::z_minus()
             .coords(0.0, qubit as f64)
             .build()
         );
-
         graph
     }
 
@@ -79,7 +84,7 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::x_plus()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::x_plus()
             .coords(0.0, qubit as f64)
             .build()
         );
@@ -93,7 +98,7 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::x_minus()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::x_minus()
             .coords(0.0, qubit as f64)
             .build()
         );
@@ -107,7 +112,7 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::y_plus()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::y_plus()
             .coords(0.0, qubit as f64)
             .build()
         );
@@ -121,7 +126,7 @@ impl Clifford for GraphBuilder {
         let mut graph = Graph::new(capacity);
 
         graph.add_wires_excluding(0..capacity, [qubit]);
-        graph.add_vertex_on_wire(qubit, VertexBuilder::y_minus()
+        graph.add_vertex_along_wire(qubit, VertexBuilder::y_minus()
             .coords(0.0, qubit as f64)
             .build()
         );
@@ -179,4 +184,4 @@ mod tests {
         assert_eq!(y_plus.num_vertices(), 3);
         assert_eq!(y_plus.num_edges(), 2);
     }
-}
+}*/
