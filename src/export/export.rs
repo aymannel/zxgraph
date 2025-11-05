@@ -80,8 +80,7 @@ mod tests {
                     "-halt-on-error",
                     "-output-directory", "output",
                     &path
-                ]).status()
-                .expect("Failed to execute pdflatex");
+                ]).status().expect("Failed to execute pdflatex");
 
                 Command::new("open")
                     .current_dir("output")

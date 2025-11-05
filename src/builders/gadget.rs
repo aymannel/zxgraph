@@ -1,6 +1,6 @@
 use crate::builders::{Gadget, GraphBuilder};
 use crate::graph::phase::Phase;
-use crate::graph::{Graph, VertexBuilder};
+use crate::graph::{Graph, VertexBuilder, VertexType};
 
 impl Gadget for GraphBuilder {
     /// Builder: Generates a BaseGraph instance of some Pauli Gadget or Phase Gadget
@@ -15,16 +15,17 @@ impl Gadget for GraphBuilder {
         );
 
         for (qubit, pauli) in pauli_string.chars().enumerate() {
-            let opt_builder: Option<VertexBuilder> = match pauli.to_ascii_lowercase() {
-                'z' => Some(VertexBuilder::z()),
-                'x' => Some(VertexBuilder::x()),
-                'y' => Some(VertexBuilder::y()),
-                'i' => None,
+            let opt_vertex_type: Option<VertexType> = match pauli {
+                'z' | 'Z' => Some(VertexType::Z),
+                'x' | 'X' => Some(VertexType::X),
+                'y' | 'Y' => Some(VertexType::Y),
+                'i' | 'I' => None,
                 _ => panic!("invalid pauli character")
             };
 
-            if let Some(builder) = opt_builder {
-                let vertex = graph.add_unary(qubit, builder
+            if let Some(vertex_type) = opt_vertex_type {
+                let vertex = graph.add_unary(qubit, VertexBuilder::new()
+                    .vertex_type(vertex_type)
                     .coords(0.0, qubit as f64)
                     .build()
                 );
