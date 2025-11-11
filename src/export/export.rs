@@ -12,7 +12,6 @@ impl Exportable for Graph {
         for (node_index, vertex) in self.enumerate_vertices() {
             if let Some(coords) = vertex.coords() {
                 let style: &str = match (vertex.vertex_type(), vertex.phase().is_zero()) {
-                    (VertexType::B, _) => "boundary",
                     (VertexType::H, _) => "hadamard",
                     (VertexType::Z, true) => "z_node",
                     (VertexType::X, true) => "x_node",
@@ -45,6 +44,22 @@ impl Exportable for Graph {
             let source = edge.source().index();
             let target = edge.target().index();
             writeln!(&mut edges, "\t\t\t\\draw [style={style}] ({source}) to ({target});")?;
+        }
+
+        // Add inputs
+        for &qubit in self.input_qubits() {
+            let y = -(qubit as f64);
+            let index = self.input_index(qubit).unwrap().index();
+            writeln!(&mut edges, "\t\t\t\\draw [style=simple_edge] ({index}) to (in{index});")?;
+            writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (in{index}) at (-1, {y}) {{}};")?;
+        }
+
+        // Add outputs
+        for &qubit in self.output_qubits() {
+            let y = -(qubit as f64);
+            let index = self.input_index(qubit).unwrap().index();
+            writeln!(&mut edges, "\t\t\t\\draw [style=simple_edge] ({index}) to (out{index});")?;
+            writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (out{index}) at (1, {y}) {{}};")?;
         }
 
         // Return latex

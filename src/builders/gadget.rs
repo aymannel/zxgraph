@@ -16,10 +16,10 @@ impl Gadget for GraphBuilder {
 
         for (qubit, pauli) in pauli_string.chars().enumerate() {
             let opt_vertex_type: Option<VertexType> = match pauli {
+                'i' | 'I' => None,
                 'z' | 'Z' => Some(VertexType::Z),
                 'x' | 'X' => Some(VertexType::X),
                 'y' | 'Y' => Some(VertexType::Y),
-                'i' | 'I' => None,
                 _ => panic!("invalid pauli character")
             };
 
@@ -54,6 +54,6 @@ mod tests {
         assert_eq!(gadget.num_inputs(), 3);
         assert_eq!(gadget.num_outputs(), 3);
         assert_eq!(gadget.num_vertices(), 4);
-        assert_eq!(gadget.num_edges(), 9);
+        assert_eq!(gadget.num_edges(), 3);
     }
 }

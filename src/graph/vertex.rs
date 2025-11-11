@@ -4,10 +4,13 @@ use crate::graph::phase::Phase;
 pub type VertexIndex = NodeIndex;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum VertexType { B, Z, X, Y, H }
+pub enum VertexType { Z, X, Y, H }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Coords { pub x: f64, pub y: f64 }
+pub struct Coords {
+    pub x: f64,
+    pub y: f64
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vertex {
@@ -47,18 +50,15 @@ impl Vertex {
     pub fn set_coords(&mut self, coords: Coords) {
         self.coords = Some(coords);
     }
+
+    /// Returns true if Vertex has coordinates
+    pub fn is_positioned(&self) -> bool {
+        self.coords.is_some()
+    }
 }
 
 /// Constructors
 impl Vertex {
-    pub fn b() -> Self {
-        Self {
-            vertex_type: VertexType::B,
-            phase: Phase::zero(),
-            coords: None,
-        }
-    }
-
     pub fn z() -> Self {
         Self {
             vertex_type: VertexType::Z,
@@ -187,10 +187,5 @@ impl VertexBuilder {
     /// Builder: convenience constructor
     pub fn y_minus() -> Self {
         Self::y().phase(Phase::minus())
-    }
-
-    /// Builder: convenience constructor
-    pub fn b() -> Self {
-        Self::new().vertex_type(VertexType::B).phase(Phase::zero())
     }
 }
