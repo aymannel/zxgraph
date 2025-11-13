@@ -1,20 +1,35 @@
 use crate::export::{ExportError, Exportable};
-use crate::graph::{EdgeType, Graph, VertexType};
+use crate::graph::phase::Phase;
+use crate::graph::{Coords, EdgeType, Graph, VertexType};
 use petgraph::prelude::EdgeRef;
 use std::fmt::Write;
 use std::fs;
 
+impl Exportable for Coords {
+    fn to_tex(&self) -> Result<String, ExportError> {
+        Ok(format!("{:.2}, {:.2}", self.x, -self.y))
+    }
+}
+
+impl Exportable for Phase {
+    fn to_tex(&self) -> Result<String, ExportError> {
+        match (self.angle().numer(), self.angle().denom()) {
+            (Some(0), Some(1)) => Ok(String::new()),
+            (Some(1), Some(1)) => Ok("$\\pi$".to_owned()),
+            (Some(0), Some(d)) => Ok(format!("$\\frac{{\\pi}}{{{}}}$", d)),
+            (Some(n), Some(d)) => Ok(format!("$\\frac{{{}\\pi}}{{{}}}$", n, d)),
+            _ => Err(ExportError::InvalidPhase)
+        }
+    }
+}
+
 impl Exportable for Graph {
     fn to_tex(&self) -> Result<String, ExportError> {
-        // Add vertices
+        // Write vertices
         let mut vertices = String::new();
-        for (node_index, vertex) in self.enumerate_vertices() {
+        for (index, vertex) in self.enumerate_vertices() {
             if let Some(coords) = vertex.coords() {
-                let x = coords.x;
-                let y = -coords.y;
-                let index = node_index.index();
-                let phase = vertex.phase().to_latex();
-                let style = match (vertex.vertex_type(), phase.is_empty()) {
+                let style = match (vertex.vertex_type(), vertex.phase().is_zero()) {
                     (VertexType::H, _) => "hadamard",
                     (VertexType::Z, true) => "z_node",
                     (VertexType::X, true) => "x_node",
@@ -23,13 +38,18 @@ impl Exportable for Graph {
                     (VertexType::X, false) => "x_phase",
                     (VertexType::Y, false) => "y_phase",
                 };
-                writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};")?;
+                writeln!(
+                    &mut vertices, "\t\t\t\\node [style={style}] ({}) at ({}) {{{}}};",
+                    index.index(),
+                    coords.to_tex()?,
+                    vertex.phase().to_tex()?
+                )?;
             } else {
-                return Err(ExportError::MissingCoords(node_index.index()))
+                return Err(ExportError::VertexMissingCoords(index.index()))
             }
         }
 
-        // Add edges
+        // Write edges
         let mut edges = String::new();
         for edge in self.enumerate_edges() {
             let source = edge.source().index();
@@ -41,20 +61,25 @@ impl Exportable for Graph {
             writeln!(&mut edges, "\t\t\t\\draw [style={style}] ({source}) to ({target});")?;
         }
 
-        // Add inputs
-        for &qubit in self.input_qubits() {
+        // Write boundaries
+        for qubit in 0..self.max_qubit() {
             let y = -(qubit as f64);
-            let index = self.input_index(qubit).unwrap().index();
-            writeln!(&mut edges, "\t\t\t\\draw [style=simple_edge] ({index}) to (in{index});")?;
-            writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (in{index}) at (-1, {y}) {{}};")?;
-        }
-
-        // Add outputs
-        for &qubit in self.output_qubits() {
-            let y = -(qubit as f64);
-            let index = self.output_index(qubit).unwrap().index();
-            writeln!(&mut edges, "\t\t\t\\draw [style=simple_edge] ({index}) to (out{index});")?;
-            writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (out{index}) at (1, {y}) {{}};")?;
+            match (self.input_index(qubit), self.output_index(qubit)) {
+                (Some(input), Some(output)) => {
+                    let input_index = input.index();
+                    let output_index = output.index();
+                    writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (in{input_index}) at (-1, {y}) {{}};")?;
+                    writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (out{output_index}) at (1, {y}) {{}};")?;
+                    writeln!(&mut edges, "\t\t\t\\draw [style=simple_edge] ({input_index}) to (in{input_index});")?;
+                    writeln!(&mut edges, "\t\t\t\\draw [style=simple_edge] ({output_index}) to (out{output_index});")?;
+                },
+                (None, None) => {
+                    writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (bi{qubit}) at (-1, {y}) {{}};")?;
+                    writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (bo{qubit}) at (1, {y}) {{}};")?;
+                    writeln!(&mut edges, "\t\t\t\\draw [style=simple_edge] (bi{qubit}) to (bo{qubit});")?;
+                }
+                _ => todo!()
+            }
         }
 
         // Format latex string
@@ -103,7 +128,7 @@ mod tests {
 
     #[test]
     fn can_export_gadget() {
-        let graph = GraphBuilder::gadget("XYZ", Phase::minus());
+        let graph = GraphBuilder::gadget("YIXZ", Phase::minus());
         export_and_open!(graph, "gadget.tex");
     }
 

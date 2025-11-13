@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Graph {
+    max_qubit: usize,
     inputs: HashMap<usize, VertexIndex>,
     outputs: HashMap<usize, VertexIndex>,
     graph: StableUnGraph<Vertex, EdgeType>,
@@ -16,6 +17,7 @@ impl Graph {
     /// Creates new Graph
     pub fn new(capacity: usize) -> Self {
         Graph {
+            max_qubit: capacity,
             inputs: HashMap::new(),
             outputs: HashMap::new(),
             graph: StableUnGraph::with_capacity(capacity, capacity),
@@ -250,6 +252,13 @@ impl Graph {
     /// Runs in **O(1)** time.
     pub fn num_outputs(&self) -> usize {
         self.outputs.len()
+    }
+
+    /// Returns the maximum qubit
+    ///
+    /// Runs in **O(1)** time.
+    pub fn max_qubit(&self) -> usize {
+        self.max_qubit
     }
 }
 

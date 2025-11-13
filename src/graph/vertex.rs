@@ -1,5 +1,5 @@
-use petgraph::graph::NodeIndex;
 use crate::graph::phase::Phase;
+use petgraph::graph::NodeIndex;
 
 pub type VertexIndex = NodeIndex;
 

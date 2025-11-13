@@ -4,9 +4,10 @@ pub mod export;
 
 #[derive(Debug, Error)]
 pub enum ExportError {
-    #[error("I/O error: {0}")] Io(#[from] std::io::Error),
+    #[error("invalid phase fraction")] InvalidPhase,
+    #[error("vertex {0} has no coordinates")] VertexMissingCoords(usize),
     #[error("formatting error: {0}")] Fmt(#[from] std::fmt::Error),
-    #[error("vertex {0} has no coordinates")] MissingCoords(usize),
+    #[error("I/O error: {0}")] Io(#[from] std::io::Error),
 }
 
 pub trait Exportable {

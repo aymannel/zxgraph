@@ -6,6 +6,14 @@ pub struct Phase {
 }
 
 impl Phase {
+    pub fn new(angle: f64) -> Self {
+        let mut frac = Fraction::from(angle % 2.0);
+        if frac < Fraction::from(0) {
+            frac += Fraction::from(2)
+        }
+        Phase { angle: frac }
+    }
+
     pub fn zero() -> Self {
         Phase::new(0.0)
     }
@@ -22,23 +30,6 @@ impl Phase {
         Phase::new(-0.5)
     }
 
-    pub fn new(angle: f64) -> Self {
-        let mut frac = Fraction::from(angle % 2.0);
-        if frac < Fraction::from(0) {
-            frac += Fraction::from(2)
-        }
-        Phase { angle: frac }
-    }
-
-    pub fn to_latex(&self) -> String {
-        match (self.angle.numer().unwrap(), self.angle.denom().unwrap()) {
-            (0, 1) => String::from(""),
-            (1, 1) => String::from("$\\pi$"),
-            (1, d) => format!("$\\frac{{\\pi}}{{{}}}$", d),
-            (n, d) => format!("$\\frac{{{}\\pi}}{{{}}}$", n, d),
-        }
-    }
-
     pub fn is_zero(&self) -> bool {
         self.angle == Fraction::from(0)
     }
@@ -51,6 +42,7 @@ impl Phase {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::export::Exportable;
 
     macro_rules! frac {
         ($num:expr, $den:expr) => {
@@ -113,36 +105,36 @@ mod tests {
     #[test]
     fn test_to_latex_zero() {
         let phase = Phase { angle: Fraction::from(0) };
-        assert_eq!(phase.to_latex(), "");
+        assert_eq!(phase.to_tex().unwrap(), "");
     }
 
     #[test]
     fn test_to_latex_pi() {
         let phase = Phase { angle: Fraction::from(1) };
-        assert_eq!(phase.to_latex(), "$\\pi$");
+        assert_eq!(phase.to_tex().unwrap(), "$\\pi$");
     }
 
     #[test]
     fn test_to_latex_half_pi() {
         let phase = Phase { angle: frac!(1, 2) };
-        assert_eq!(phase.to_latex(), "$\\frac{\\pi}{2}$");
+        assert_eq!(phase.to_tex().unwrap(), "$\\frac{\\pi}{2}$");
     }
 
     #[test]
     fn test_to_latex_three_halves_pi() {
         let phase = Phase { angle: frac!(3, 2) };
-        assert_eq!(phase.to_latex(), "$\\frac{3\\pi}{2}$");
+        assert_eq!(phase.to_tex().unwrap(), "$\\frac{3\\pi}{2}$");
     }
 
     #[test]
     fn test_to_latex_negative_half_pi() {
         let phase = Phase { angle: frac!(-1, 2) };
-        assert_eq!(phase.to_latex(), "$\\frac{\\pi}{2}$");
+        assert_eq!(phase.to_tex().unwrap(), "$\\frac{\\pi}{2}$");
     }
 
     #[test]
     fn test_to_latex_fraction_with_large_denominator() {
         let phase = Phase { angle: frac!(1, 8) };
-        assert_eq!(phase.to_latex(), "$\\frac{\\pi}{8}$");
+        assert_eq!(phase.to_tex().unwrap(), "$\\frac{\\pi}{8}$");
     }
 }
