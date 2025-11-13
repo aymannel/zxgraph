@@ -11,5 +11,5 @@ pub enum ExportError {
 
 pub trait Exportable {
     /// Generates latex
-    fn to_tex(&self, name: &str) -> Result<String, ExportError>;
+    fn to_tex(&self) -> Result<String, ExportError>;
 }

@@ -5,31 +5,27 @@ use std::fmt::Write;
 use std::fs;
 
 impl Exportable for Graph {
-    fn to_tex(&self, name: &str) -> Result<String, ExportError> {
+    fn to_tex(&self) -> Result<String, ExportError> {
         // Add vertices
         let mut vertices = String::new();
         for (node_index, vertex) in self.enumerate_vertices() {
-            let index = node_index.index();
-            let phase = vertex.phase().to_latex();
-            match vertex.coords() {
-                Some(coords) => {
-                    let x = coords.x;
-                    let y = -coords.y;
-                    let style: &str = match (vertex.vertex_type(), phase.is_empty()) {
-                        (VertexType::H, _) => "hadamard",
-                        (VertexType::Z, true) => "z_node",
-                        (VertexType::X, true) => "x_node",
-                        (VertexType::Y, true) => "y_node",
-                        (VertexType::Z, false) => "z_phase",
-                        (VertexType::X, false) => "x_phase",
-                        (VertexType::Y, false) => "y_phase",
-                    };
-                    writeln!(
-                        &mut vertices,
-                        "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};"
-                    )?;
-                }
-                None => return Err(ExportError::MissingCoords(index))
+            if let Some(coords) = vertex.coords() {
+                let phase = vertex.phase().to_latex();
+                let style = match (vertex.vertex_type(), phase.is_empty()) {
+                    (VertexType::H, _) => "hadamard",
+                    (VertexType::Z, true) => "z_node",
+                    (VertexType::X, true) => "x_node",
+                    (VertexType::Y, true) => "y_node",
+                    (VertexType::Z, false) => "z_phase",
+                    (VertexType::X, false) => "x_phase",
+                    (VertexType::Y, false) => "y_phase",
+                };
+                writeln!(
+                    &mut vertices, "\t\t\t\\node [style={style}] ({}) at ({:.2}, {:.2}) {{{phase}}};",
+                    node_index.index(), coords.x, -coords.y
+                )?;
+            } else {
+                return Err(ExportError::MissingCoords(node_index.index()))
             }
         }
 
