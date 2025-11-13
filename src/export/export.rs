@@ -10,6 +10,9 @@ impl Exportable for Graph {
         let mut vertices = String::new();
         for (node_index, vertex) in self.enumerate_vertices() {
             if let Some(coords) = vertex.coords() {
+                let x = coords.x;
+                let y = -coords.y;
+                let index = node_index.index();
                 let phase = vertex.phase().to_latex();
                 let style = match (vertex.vertex_type(), phase.is_empty()) {
                     (VertexType::H, _) => "hadamard",
@@ -20,10 +23,7 @@ impl Exportable for Graph {
                     (VertexType::X, false) => "x_phase",
                     (VertexType::Y, false) => "y_phase",
                 };
-                writeln!(
-                    &mut vertices, "\t\t\t\\node [style={style}] ({}) at ({:.2}, {:.2}) {{{phase}}};",
-                    node_index.index(), coords.x, -coords.y
-                )?;
+                writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};")?;
             } else {
                 return Err(ExportError::MissingCoords(node_index.index()))
             }
@@ -78,7 +78,7 @@ mod tests {
             {
                 let graph = $graph;
                 let file_name = $file_name;
-                let output = graph.to_tex(file_name).expect("Could not generate tex file");
+                let output = graph.to_tex().expect("Could not generate tex file");
 
                 assert!(file_name.ends_with(".tex"));
                 let path = format!("output/{file_name}");
