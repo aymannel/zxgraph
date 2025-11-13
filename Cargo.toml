@@ -11,3 +11,4 @@ crate-type = ["cdylib"]
 pyo3 = "0.25.0"
 petgraph = { version = "0.8", features = ["stable_graph"] }
 fraction = "0.15.3"
+thiserror = "2.0.17"

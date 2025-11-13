@@ -1,48 +1,47 @@
-use crate::export::Exportable;
+use crate::export::{ExportError, Exportable};
 use crate::graph::{EdgeType, Graph, VertexType};
 use petgraph::prelude::EdgeRef;
-use std::error::Error;
 use std::fmt::Write;
 use std::fs;
 
 impl Exportable for Graph {
-    fn to_tex(&self, name: &str) -> Result<String, Box<dyn Error>> {
+    fn to_tex(&self, name: &str) -> Result<String, ExportError> {
         // Add vertices
         let mut vertices = String::new();
         for (node_index, vertex) in self.enumerate_vertices() {
-            if let Some(coords) = vertex.coords() {
-                let style: &str = match (vertex.vertex_type(), vertex.phase().is_zero()) {
-                    (VertexType::H, _) => "hadamard",
-                    (VertexType::Z, true) => "z_node",
-                    (VertexType::X, true) => "x_node",
-                    (VertexType::Y, true) => "y_node",
-                    (VertexType::Z, false) => "z_phase",
-                    (VertexType::X, false) => "x_phase",
-                    (VertexType::Y, false) => "y_phase",
-                };
-
-                // Format export node
-                let x = coords.x;
-                let y = -coords.y;
-                let index = node_index.index();
-                let phase = vertex.phase().to_latex();
-                writeln!(&mut vertices, "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};")?;
-            } else {
-                return Err(format!("Vertex {} has no coordinates", node_index.index()).into());
+            let index = node_index.index();
+            let phase = vertex.phase().to_latex();
+            match vertex.coords() {
+                Some(coords) => {
+                    let x = coords.x;
+                    let y = -coords.y;
+                    let style: &str = match (vertex.vertex_type(), phase.is_empty()) {
+                        (VertexType::H, _) => "hadamard",
+                        (VertexType::Z, true) => "z_node",
+                        (VertexType::X, true) => "x_node",
+                        (VertexType::Y, true) => "y_node",
+                        (VertexType::Z, false) => "z_phase",
+                        (VertexType::X, false) => "x_phase",
+                        (VertexType::Y, false) => "y_phase",
+                    };
+                    writeln!(
+                        &mut vertices,
+                        "\t\t\t\\node [style={style}] ({index}) at ({x:.2}, {y:.2}) {{{phase}}};"
+                    )?;
+                }
+                None => return Err(ExportError::MissingCoords(index))
             }
         }
 
         // Add edges
         let mut edges = String::new();
         for edge in self.enumerate_edges() {
+            let source = edge.source().index();
+            let target = edge.target().index();
             let style = match edge.weight() {
                 EdgeType::Simple => "simple_edge",
                 EdgeType::Hadamard => "hadamard_edge",
             };
-
-            // Format export edge
-            let source = edge.source().index();
-            let target = edge.target().index();
             writeln!(&mut edges, "\t\t\t\\draw [style={style}] ({source}) to ({target});")?;
         }
 
@@ -57,12 +56,12 @@ impl Exportable for Graph {
         // Add outputs
         for &qubit in self.output_qubits() {
             let y = -(qubit as f64);
-            let index = self.input_index(qubit).unwrap().index();
+            let index = self.output_index(qubit).unwrap().index();
             writeln!(&mut edges, "\t\t\t\\draw [style=simple_edge] ({index}) to (out{index});")?;
             writeln!(&mut vertices, "\t\t\t\\node [style=boundary] (out{index}) at (1, {y}) {{}};")?;
         }
 
-        // Return latex
+        // Format latex string
         let template = fs::read_to_string("src/export/template.tex")?;
         let tex_output = template.replace("{vertices}", &vertices).replace("{edges}", &edges);
         Ok(tex_output)
