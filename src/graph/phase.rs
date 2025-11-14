@@ -30,10 +30,6 @@ impl Phase {
         Phase::new(-0.5)
     }
 
-    pub fn is_zero(&self) -> bool {
-        self.angle == Fraction::from(0)
-    }
-
     pub fn angle(&self) -> Fraction {
         self.angle
     }
@@ -84,20 +80,6 @@ mod tests {
     fn test_phase_from_multiple_of_two_pi_wraps_to_zero() {
         let phase = Phase::new(6.0);
         assert_eq!(phase.angle(), Fraction::from(0));
-    }
-
-    // Phase::is_zero()
-
-    #[test]
-    fn test_is_zero_true_for_zero() {
-        let phase = Phase::new(0.0);
-        assert!(phase.is_zero());
-    }
-
-    #[test]
-    fn test_is_zero_false_for_nonzero() {
-        let phase = Phase::new(1.0);
-        assert!(!phase.is_zero());
     }
 
     // Phase::to_latex()
